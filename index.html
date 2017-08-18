@@ -29,6 +29,7 @@
             margin-left: auto;
             margin-right: auto;
             margin-bottom: auto;
+            background-color: #000;
         }
 
         .controls {
@@ -69,8 +70,14 @@
     <!-- 
         http://fms.cntv.lxdns.com/live/flv/channel6.flv
     -->
+
+    <!-- 
+        local test: http://192.168.40.141:8080/live/xmpolice.flv
+        249server: http://192.168.1.249:8080/live/xmpolice.flv
+    -->
+
     <div class="mainContainer">
-        <input name="urlinput" class="urlInput" type="text" value="http://fms.cntv.lxdns.com/live/flv/channel6.flv" />
+        <input name="urlinput" class="urlInput" type="text" value="http://192.168.40.141:8080/live/xmpolice.flv" />
         <video name="videoElement" class="centeredVideo" controls autoplay width="1024" height="576">
             Your browser is too old which doesn't support HTML5 video.
         </video>
@@ -111,12 +118,13 @@
 
             player.attachMediaElement(element);
             player.load();
+
             /*
             var xhr = new XMLHttpRequest();
             xhr.open('GET', urlinput.value, true);
             xhr.setRequestHeader('Access-Control-Allow-Origin', '*');
             xhr.onload = function (e) {
-
+                
             }
             xhr.send(null);
             */
