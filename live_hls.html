@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    <title>live demo</title>
+    <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+    <link rel="stylesheet" type="text/css" href="css/live.css" />
+</head>
+
+<body>
+    <!-- 
+        flv
+        http://www.zhiboba.cc/app/flvzb.html?id=flv地址
+        http://fms.cntv.lxdns.com/live/flv/channel6.flv
+
+        http-flv
+        local test: http://192.168.40.141:8080/live/xmpolice.flv
+        249server: http://192.168.1.249:8080/live/xmpolice.flv
+
+        HLS
+        http://192.168.1.249:8080/live/xmpolice.m3u8
+
+        RTMP
+        rtmp://192.168.1.249:1935/live/xmpolice
+    -->
+
+    <div class="mainContainer">
+
+        <input name="urlinput" class="urlInput" type="text" value="http://192.168.1.249:8080/live/xmpolice" />
+
+        <div class="liveFlash" id="liveFlash">
+            <video name="videoElement" class="centeredVideo" controls autoplay>
+                Your browser is too old which doesn't support HTML5 video.
+            </video>
+        </div>
+
+        <div class="controls">
+            <button onclick="flv_load()">Load</button>
+            <button onclick="flv_start()">Start</button>
+            <button onclick="flv_pause()">Pause</button>
+            <button onclick="flv_destroy()">Destroy</button>
+            <input style="width:100px" type="text" name="seekpoint" />
+            <button onclick="flv_seekto()">SeekTo</button>
+        </div>
+        <textarea name="logcatbox" class="logcatBox" rows="10" readonly></textarea>
+    </div>
+
+    <script type="text/javascript" charset="utf-8" src="js/lib/jquery-1.9.1.js"></script>
+    <script type="text/javascript" charset="utf-8" src="js/lib/flv.min.js"></script>
+    <script type="text/javascript" charset="utf-8" src="js/lib/hls.min.js"></script>
+    <script type="text/javascript" charset="utf-8" src="js/lib/yzplayer.js"></script>
+    <script type="text/javascript" charset="utf-8" src="js/live.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            hls_load();
+            // flv_load();
+            // flash_load()
+        });
+    </script>
+
+</body>
+
+</html>
