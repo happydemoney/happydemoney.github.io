@@ -2,25 +2,33 @@ var player;
 function flash_load() {
     var urlinput = document.getElementsByName('urlinput')[0];
     // var liveUrl = urlinput.value + '.m3u8';
-    var liveUrl = 'rtmp://192.168.1.249:1935/live/xmpolice';
+    // var liveUrl = 'rtmp://192.168.1.249:1935/live/xmpolice';
+    var liveUrl = 'rtmp://127.0.0.1:1935/live/reflv';
     /*直播视频播放m3u8地址*/
     var liveFlash = document.getElementById("liveFlash");
-    // var flashvars = {
-    //     f: liveUrl,
-    //     c: 0
-    // };
-    // var video = ['http://192.168.1.249:8080/live/xmpolice.m3u8'];
-    // CKobject.embed('swf/ckplayer.swf', 'liveFlash', 'ckplayer_a1', '100%', '100%', false, flashvars, video);
-
-    // var params = { bgcolor: '#FFF', allowFullScreen: true, allowScriptAccess: 'always', wmode: '#000' };
-    // CKobject.embedSWF('swf/testhls.swf', 'liveFlash', 'ckplayer_a1', '100%', '100%', flashvars, params);
-
+    var swfVersionStr = "10.3.0";
+    var xiSwfUrlStr = "swf/expressInstall.swf";
+    var soFlashVars = {
+        src: liveUrl,
+        streamType: 'live',
+        autoPlay: "true",
+        controlBarAutoHide: "true",
+        controlBarPosition: "bottom"
+    };
+    var params = {
+        quality: 'high',
+        allowscriptaccess: 'sameDomain',
+    };
+    /*
     var flashvars = {
-        f: liveUrl,//视频地址  
+        f: liveUrl,
         s: '0'
     };
     var params = { bgcolor: '#000000', allowFullScreen: true, allowScriptAccess: 'always', wmode: '#000' };
     CKobject.embedSWF('swf/ckplayer.swf', 'liveFlash', 'ckplayer_a1', '100%', '100%', flashvars, params);
+    */
+
+    swfobject.embedSWF('swf/player.swf', 'liveFlash', "100%", "100%", swfVersionStr, xiSwfUrlStr, soFlashVars, params);
 }
 function hls_load() {
     console.log('isSupported: ' + Hls.isSupported());
@@ -28,7 +36,8 @@ function hls_load() {
 
     var video = document.getElementsByName('videoElement')[0];
 
-    var liveUrl = urlinput.value + '.m3u8';
+    // var liveUrl = urlinput.value + '.m3u8';
+    var liveUrl = 'http://localhost:7002/live/reflv.m3u8';
 
     if (Hls.isSupported()) {
         // var video = document.getElementById('video');
@@ -46,7 +55,8 @@ function flv_load() {
 
     var element = document.getElementsByName('videoElement')[0];
 
-    var liveUrl = urlinput.value + '.flv';
+    // var liveUrl = urlinput.value + '.flv';
+    var liveUrl = 'http://localhost:7001/live/reflv.flv';
     if (typeof player !== "undefined") {
         if (player != null) {
             player.unload();
@@ -61,6 +71,7 @@ function flv_load() {
         cors: true,
         url: liveUrl,
         Config: {
+            // fixAudioTimestampGap: false,
             enableWorker: true,
             enableStashBuffer: false,
             stashInitialSize: 128   // 减少首桢显示等待时长
