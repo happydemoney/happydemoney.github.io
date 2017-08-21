@@ -60,7 +60,7 @@ function flv_load() {
         isLive: true,
         cors: true,
         url: liveUrl,
-        config: {
+        Config: {
             enableWorker: true,
             enableStashBuffer: false,
             stashInitialSize: 128   // 减少首桢显示等待时长
@@ -69,6 +69,7 @@ function flv_load() {
 
     player.attachMediaElement(element);
     player.load();
+    player.play();
 
     /*
     var xhr = new XMLHttpRequest();
