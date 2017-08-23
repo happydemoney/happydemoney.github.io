@@ -83,14 +83,16 @@ function setStreamUrl() {
         onDemandPort = '8080',
         videoServerPath = 'videoTest',
         liveStreamUrl = {
-            RTMP: 'rtmp://' + hostName + ':' + flashPort + '/' + appName + '/' + streamName,
+            // RTMP: 'rtmp://' + hostName + ':' + flashPort + '/' + appName + '/' + streamName,
+            RTMP: 'rtmp://live.hkstv.hk.lxdns.com/live/hks',
             HTTPFLV: 'http://' + hostName + ':' + flvPort + '/' + appName + '/' + streamName + '.flv',
-            HLS: 'http://' + hostName + ':' + hlsPort + '/' + appName + '/' + streamName + '.m3u8'
+            // HLS: 'http://' + hostName + ':' + hlsPort + '/' + appName + '/' + streamName + '.m3u8'
+            HLS: 'http://ivi.bupt.edu.cn/hls/cctv6hd.m3u8'
         },
         oVideoUrl = {
-            flash: 'http://' + hostName + ':' + onDemandPort + '/' + videoServerPath + '/' + 'test.mp4',
+            flash: 'https://cdn.memorieslab.com//video/mgn_brand_video.mp4',
             flv: 'http://' + hostName + ':' + onDemandPort + '/' + videoServerPath + '/' + 'demo.flv',
-            hls: 'http://' + hostName + ':' + onDemandPort + '/' + videoServerPath + '/m3u8/' + 'xmpolice.m3u8' // .mp4 - .ogg - .webm
+            hls: 'http://ivi.bupt.edu.cn/hls/cctv5hd.m3u8'
         };
 
     window.liveStreamUrl = liveStreamUrl;

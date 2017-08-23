@@ -15,12 +15,12 @@
     }
     (default: Html5)
 ```
-* liveStramUrl(object)
+* liveStreamUrl(object)
 ```javascript
 // if -- (isLive: true)  -- to set --
     {
         isLive: true,
-        liveStramUrl: {
+        liveStreamUrl: {
             RTMP: 'rtmp://<hostName>:1935/<appName>/<sreamName>',
             HLS: 'http://<hostName>:HLSport/<appName>/<streamName>.m3u8',
             HTTPFLV: 'http://<hostName>:FLVport/<appName>/<streamName>.flv'
@@ -31,7 +31,7 @@
 * videoUrl(string)
 ```javascript
 // if -- (isLive: false)  -- must be set --
-// otherwise (isLive: true && liveStramUrl(not set)) -- must be set --
+// otherwise (isLive: true && liveStreamUrl(not set)) -- must be set --
     {
         videoUrl: 'http://***.mp4(.ogg/.webm/.flv/.m3u8)'
     }
@@ -55,7 +55,7 @@
     // 2. live(直播)
     $('#videoWrap').videoPlayer({
         isLive: true,
-        liveStramUrl: {
+        liveStreamUrl: {
             RTMP: 'rtmp://<hostName>:1935/<appName>/<sreamName>',
             HLS: 'http://<hostName>:HLSport/<appName>/<streamName>.m3u8',
             HTTPFLV: 'http://<hostName>:FLVport/<appName>/<streamName>.flv'

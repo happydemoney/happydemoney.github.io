@@ -16,7 +16,7 @@
                 // 播放器类型
                 playerType: 'Html5',    // Html5 - Flash
                 // 直播视频流 rtmp视频流 - http-flv视频流 - hls分片视频索引文件(m3u8)
-                liveStramUrl: {
+                liveStreamUrl: {
                     RTMP: '',
                     HLS: '',
                     HTTPFLV: ''
@@ -52,12 +52,12 @@
 
     function initVideoUrl(config) {
         if (config.isLive) {
-            if (flvjs.isSupported() && config.liveStramUrl.HTTPFLV) {
-                config.videoUrl = config.liveStramUrl.HTTPFLV;
-            } else if (Hls.isSupported() && config.liveStramUrl.HLS) {
-                config.videoUrl = config.liveStramUrl.HLS;
-            } else if (config.liveStramUrl.RTMP) {
-                config.videoUrl = config.liveStramUrl.RTMP;
+            if (flvjs.isSupported() && config.liveStreamUrl.HTTPFLV) {
+                config.videoUrl = config.liveStreamUrl.HTTPFLV;
+            } else if (Hls.isSupported() && config.liveStreamUrl.HLS) {
+                config.videoUrl = config.liveStreamUrl.HLS;
+            } else if (config.liveStreamUrl.RTMP) {
+                config.videoUrl = config.liveStreamUrl.RTMP;
             }
         }
     }
