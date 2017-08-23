@@ -91,7 +91,7 @@ function setStreamUrl() {
         },
         oVideoUrl = {
             flash: 'https://cdn.memorieslab.com//video/mgn_brand_video.mp4',
-            flv: 'http://' + hostName + ':' + onDemandPort + '/' + videoServerPath + '/' + 'demo.flv',
+            flv: 'https://cdn.memorieslab.com//video/mgn_brand_video.mp4',
             hls: 'http://ivi.bupt.edu.cn/hls/cctv5hd.m3u8'
         };
 
