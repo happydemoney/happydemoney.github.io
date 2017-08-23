@@ -1,37 +1,65 @@
-## Welcome to GitHub Pages
+#   videoPlayer
 
-You can use the [editor on GitHub](https://github.com/happydemoney/happydemoney.github.io/edit/master/README.md) to maintain and preview the content for your website in Markdown files.
-
-Whenever you commit to this repository, GitHub Pages will run [Jekyll](https://jekyllrb.com/) to rebuild the pages in your site, from the content in your Markdown files.
-
-### Markdown
-
-Markdown is a lightweight and easy-to-use syntax for styling your writing. It includes conventions for
-
-```markdown
-Syntax highlighted code block
-
-# Header 1
-## Header 2
-### Header 3
-
-- Bulleted
-- List
-
-1. Numbered
-2. List
-
-**Bold** and _Italic_ and `Code` text
-
-[Link](url) and ![Image](src)
+##  config
+* isLive(true/false) 
+```javascript
+   {
+       isLive: false
+   } 
+   (default: false)
 ```
+* playerType(Html5/Flash)
+```javascript
+    {
+        playerType: 'Html5'
+    }
+    (default: Html5)
+```
+* liveStramUrl(object)
+```javascript
+// if -- (isLive: true)  -- to set --
+    {
+        isLive: true,
+        liveStramUrl: {
+            RTMP: 'rtmp://<hostName>:1935/<appName>/<sreamName>',
+            HLS: 'http://<hostName>:HLSport/<appName>/<streamName>.m3u8',
+            HTTPFLV: 'http://<hostName>:FLVport/<appName>/<streamName>.flv'
+        }
+    }
 
-For more details see [GitHub Flavored Markdown](https://guides.github.com/features/mastering-markdown/).
+```
+* videoUrl(string)
+```javascript
+// if -- (isLive: false)  -- must be set --
+// otherwise (isLive: true && liveStramUrl(not set)) -- must be set --
+    {
+        videoUrl: 'http://***.mp4(.ogg/.webm/.flv/.m3u8)'
+    }
+```
+##How to use
+```javascript
+<link rel="stylesheet" type="text/css" href="css/videoPlayer.css" />
 
-### Jekyll Themes
+<div id="videoWrap"></div>
 
-Your Pages site will use the layout and styles from the Jekyll theme you have selected in your [repository settings](https://github.com/happydemoney/happydemoney.github.io/settings). The name of this theme is saved in the Jekyll `_config.yml` configuration file.
-
-### Support or Contact
-
-Having trouble with Pages? Check out our [documentation](https://help.github.com/categories/github-pages-basics/) or [contact support](https://github.com/contact) and we’ll help you sort it out.
+<script type="text/javascript" charset="utf-8" src="js/lib/jquery-1.9.1.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/lib/flv.min.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/lib/hls.min.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/lib/swfobject.js"></script>
+<script type="text/javascript" charset="utf-8" src="js/videoPlayer.js"></script>
+<script type="text/javascript" charset="utf-8" >
+    // 1. on demand(点播)
+    $('#videoWrap').videoPlayer({
+        videoUrl: 'http://***.mp4(.ogg/.webm/.flv/.m3u8)'
+    });
+    // 2. live(直播)
+    $('#videoWrap').videoPlayer({
+        isLive: true,
+        liveStramUrl: {
+            RTMP: 'rtmp://<hostName>:1935/<appName>/<sreamName>',
+            HLS: 'http://<hostName>:HLSport/<appName>/<streamName>.m3u8',
+            HTTPFLV: 'http://<hostName>:FLVport/<appName>/<streamName>.flv'
+        }
+    });
+</script>
+```

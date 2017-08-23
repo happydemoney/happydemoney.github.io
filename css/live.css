@@ -8,25 +8,6 @@
     margin-right: auto;
 }
 
-.liveContent{
-    position: relative;
-    padding-bottom: 56.25%;
-    height: 0;
-    overflow: hidden;
-}
-
-.liveContent iframe,
-.liveContent object,
-.liveContent embed ,
-.liveContent img,
-.liveContent video{
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: #000;
-}
 .render-type{
     padding: 10px 0;
     text-align: center;

@@ -9,33 +9,64 @@ function antSwitch() {
     var $this = $(this),
         $parentRenderItem = $this.parents('.render-item'),
         dataType = $this.attr('data-type'),
-        isLive = $parentRenderItem.attr('data-isLive') == 'true' ? true : false,
-        playerType = {
-            playerType: dataType,
-            isLive: isLive
-        },
-
-        videoString = "",
-        videoIdFormal = playerType.isLive ? 'live' : 'onDemand';
+        isLive = $parentRenderItem.attr('data-isLive') == 'true' ? true : false;
 
     if (!$this.hasClass('ant-switch-checked')) {
+        if (isLive) {
 
-        videoString = '<div class="liveContent">\
-                        <video id="'+ videoIdFormal + playerType.playerType + '" name="videoElement" controls autoplay>\
-                            Your browser is too old which does not support HTML5 video\
-                        </video >\
-                    </div > ';
-
-        $parentRenderItem.append(videoString);
-
-        if (playerType.isLive) {
-            videoPlayer(videoIdFormal + playerType.playerType, oVideoStreamUrl, playerType);
+            switch (dataType) {
+                case 'FlvJs':
+                    var player = $parentRenderItem.videoPlayer({
+                        liveStramUrl: liveStreamUrl,
+                        isLive: true
+                    });
+                    $parentRenderItem.data('player', player);
+                    break;
+                case 'HlsJs':
+                    var player = $parentRenderItem.videoPlayer({
+                        isLive: true,
+                        videoUrl: liveStreamUrl.HLS
+                    });
+                    $parentRenderItem.data('player', player);
+                    break;
+                case 'Flash':
+                    var player = $parentRenderItem.videoPlayer({
+                        liveStramUrl: liveStreamUrl,
+                        isLive: true,
+                        playerType: 'Flash'
+                    });
+                    $parentRenderItem.data('player', player);
+                    break;
+                default: break;
+            }
         } else {
-            videoPlayer(videoIdFormal + playerType.playerType, oVideoUrl, playerType);
+            switch (dataType) {
+                case 'FlvJs':
+                    var player = $parentRenderItem.videoPlayer({
+                        videoUrl: oVideoUrl.flv
+                    });
+                    $parentRenderItem.data('player', player);
+                    break;
+                case 'HlsJs':
+                    var player = $parentRenderItem.videoPlayer({
+                        videoUrl: oVideoUrl.hls
+                    });
+                    $parentRenderItem.data('player', player);
+                    break;
+                case 'Flash':
+                    var player = $parentRenderItem.videoPlayer({
+                        videoUrl: oVideoUrl.flash,
+                        playerType: 'Flash'
+                    });
+                    $parentRenderItem.data('player', player);
+                    break;
+                default: break;
+            }
         }
-
     } else {
-        $parentRenderItem.find('.liveContent').remove();
+        var curPlayer = $parentRenderItem.data('player');
+        curPlayer.destroy();
+        $parentRenderItem.removeData('player');
     }
     $this.toggleClass('ant-switch-checked');
 }
@@ -51,17 +82,17 @@ function setStreamUrl() {
         hlsPort = '7002',
         onDemandPort = '8080',
         videoServerPath = 'videoTest',
-        oVideoStreamUrl = {
-            flash: 'rtmp://' + hostName + ':' + flashPort + '/' + appName + '/' + streamName,
-            flv: 'http://' + hostName + ':' + flvPort + '/' + appName + '/' + streamName + '.flv',
-            html5: 'http://' + hostName + ':' + hlsPort + '/' + appName + '/' + streamName + '.m3u8'
+        liveStreamUrl = {
+            RTMP: 'rtmp://' + hostName + ':' + flashPort + '/' + appName + '/' + streamName,
+            HTTPFLV: 'http://' + hostName + ':' + flvPort + '/' + appName + '/' + streamName + '.flv',
+            HLS: 'http://' + hostName + ':' + hlsPort + '/' + appName + '/' + streamName + '.m3u8'
         },
         oVideoUrl = {
             flash: 'http://' + hostName + ':' + onDemandPort + '/' + videoServerPath + '/' + 'test.mp4',
             flv: 'http://' + hostName + ':' + onDemandPort + '/' + videoServerPath + '/' + 'demo.flv',
-            html5: 'http://' + hostName + ':' + onDemandPort + '/' + videoServerPath + '/m3u8/' + 'xmpolice.m3u8' // .mp4 - .ogg - .webm
+            hls: 'http://' + hostName + ':' + onDemandPort + '/' + videoServerPath + '/m3u8/' + 'xmpolice.m3u8' // .mp4 - .ogg - .webm
         };
 
-    window.oVideoStreamUrl = oVideoStreamUrl;
+    window.liveStreamUrl = liveStreamUrl;
     window.oVideoUrl = oVideoUrl;
 }
