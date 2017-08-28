@@ -36,7 +36,7 @@
         videoUrl: 'http://***.mp4(.ogg/.webm/.flv/.m3u8)'
     }
 ```
-##How to use
+##  How to use
 ```javascript
 <link rel="stylesheet" type="text/css" href="css/videoPlayer.css" />
 

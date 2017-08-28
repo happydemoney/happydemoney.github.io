@@ -17,7 +17,7 @@ function antSwitch() {
             switch (dataType) {
                 case 'FlvJs':
                     var player = $parentRenderItem.videoPlayer({
-                        liveStramUrl: liveStreamUrl,
+                        liveStreamUrl: liveStreamUrl,
                         isLive: true
                     });
                     $parentRenderItem.data('player', player);
@@ -31,7 +31,7 @@ function antSwitch() {
                     break;
                 case 'Flash':
                     var player = $parentRenderItem.videoPlayer({
-                        liveStramUrl: liveStreamUrl,
+                        liveStreamUrl: liveStreamUrl,
                         isLive: true,
                         playerType: 'Flash'
                     });
@@ -83,11 +83,11 @@ function setStreamUrl() {
         onDemandPort = '8080',
         videoServerPath = 'videoTest',
         liveStreamUrl = {
-            // RTMP: 'rtmp://' + hostName + ':' + flashPort + '/' + appName + '/' + streamName,
-            RTMP: 'rtmp://live.hkstv.hk.lxdns.com/live/hks',
+            RTMP: 'rtmp://' + hostName + ':' + flashPort + '/' + appName + '/' + streamName,
+            // RTMP: 'rtmp://live.hkstv.hk.lxdns.com/live/hks',
             HTTPFLV: 'http://' + hostName + ':' + flvPort + '/' + appName + '/' + streamName + '.flv',
-            // HLS: 'http://' + hostName + ':' + hlsPort + '/' + appName + '/' + streamName + '.m3u8'
-            HLS: 'http://ivi.bupt.edu.cn/hls/cctv6hd.m3u8'
+            HLS: 'http://' + hostName + ':' + hlsPort + '/' + appName + '/' + streamName + '.m3u8'
+            // HLS: 'http://ivi.bupt.edu.cn/hls/cctv6hd.m3u8'
         },
         oVideoUrl = {
             flash: 'https://cdn.memorieslab.com//video/mgn_brand_video.mp4',

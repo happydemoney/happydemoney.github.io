@@ -6,13 +6,24 @@
     }
 }(function ($) {
 
+    // 是否是支持触摸的设备    
+    var isTouchDevice = navigator.userAgent.match(/(iPhone|iPod|iPad|Android|playbook|silk|BlackBerry|BB10|Windows Phone|Tizen|Bada|webOS|IEMobile|Opera Mini)/);
+    // 是否支持触摸事件
+    var isTouch = (('ontouchstart' in window) || (navigator.msMaxTouchPoints > 0) || (navigator.maxTouchPoints));
+
     var pluginName = 'videoPlayer',
         videoPlayer = function (config, el) {
             var defaultConfig = {
+                // 调试模式
+                debug: false,
                 // 播放器容器
                 playerContainer: el,
                 // 直播(true)还是点播(false)
                 isLive: false,
+                // 视频加载完是否自动播放
+                autoplay: true,
+                // 是否显示视频控件 - 播放/音量/进度条 - 仅针对HMLT5播放器
+                controls: true,
                 // 播放器类型
                 playerType: 'Html5',    // Html5 - Flash
                 // 直播视频流 rtmp视频流 - http-flv视频流 - hls分片视频索引文件(m3u8)
@@ -28,6 +39,10 @@
             };
             config = $.extend(defaultConfig, config);
             initVideoUrl(config);
+            if (config.debug) {
+                console.log(config.videoUrl);
+                alert(config.videoUrl);
+            }
             initPlayer(config);
 
             var _oFunc = {
@@ -57,6 +72,9 @@
             } else if (Hls.isSupported() && config.liveStreamUrl.HLS) {
                 config.videoUrl = config.liveStreamUrl.HLS;
             } else if (config.liveStreamUrl.RTMP) {
+                config.videoUrl = config.liveStreamUrl.RTMP;
+            }
+            if (config.playerType === 'Flash' && config.liveStreamUrl.RTMP) {
                 config.videoUrl = config.liveStreamUrl.RTMP;
             }
         }
@@ -160,11 +178,15 @@
         var playerContainer = config.playerContainer,
             videoIdFormal = config.isLive ? 'live' : 'onDemand',
             playerId = videoIdFormal + config.playerType + '-' + idCount.Html5++,
+            controlsTag = config.controls ? "controls" : "",
+            autoplayTag = config.autoplay ? "autoplay" : "",
+            // autoplayTag = isTouchDevice && config.autoplay ? "autoplay muted" : "",
             videoString = '<div class="liveContent">\
-                        <video id="'+ playerId + '" controls autoplay>\
+                        <video id="'+ playerId + '" ' + controlsTag + " " + autoplayTag + '>\
                             Your browser is too old which does not support HTML5 video\
                         </video >\
                     </div > ';
+
         playerContainer.append(videoString);
 
         return playerId;
@@ -183,7 +205,7 @@
                     //autoCleanupSourceBuffer: true,  // 自动清理MSE内存
                     enableWorker: true,
                     enableStashBuffer: false,
-                    stashInitialSize: 128   // 减少首桢显示等待时长
+                    stashInitialSize: 256   // 减少首桢显示等待时长 默认384
                 }
             });
         player.attachMediaElement(videoDom);
@@ -221,11 +243,15 @@
     }
 
     function loadHtml5(config) {
+
         var playerId = initVideoStruct(config),
             player = document.getElementById(playerId);
         player.src = config.videoUrl;
-        player.oncanplay = function () {
-            player.play();
+
+        if (config.autoplay) {
+            player.oncanplay = function () {
+                player.play();
+            }
         }
         config.player = player;
         // 自定义 destroy
@@ -236,17 +262,20 @@
 
     function loadFlash(config) {
         var playerId = initVideoStruct(config);
-        var swfVersionStr = "9.0.0",
+        var swfVersionStr = "10.0.0",
             xiSwfUrlStr = "swf/expressInstall.swf",
             playerSwfUrlStr = "swf/player.swf",
             soFlashVars = {
                 src: config.videoUrl,
-                streamType: config.isLive ? 'live' : '',
-                autoPlay: "true",
-                controlBarAutoHide: "true",
-                controlBarPosition: "bottom"
+                streamType: config.isLive ? 'live' : 'recorded', // live - recorded - dvr 
+                autoPlay: config.autoplay,
+                muted: false,
+                loop: !config.isLive,
+                tintColor: '#000',   // #B91F1F
+                controlBarAutoHide: "true"
             },
             params = {
+                allowFullScreen: true,
                 quality: 'high',
                 allowscriptaccess: 'sameDomain',
             };
