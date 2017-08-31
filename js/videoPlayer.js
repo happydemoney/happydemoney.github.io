@@ -263,7 +263,7 @@
     function loadFlash(config) {
         var playerId = initVideoStruct(config);
         var swfVersionStr = "10.0.0",
-            xiSwfUrlStr = "swf/expressInstall.swf",
+            xiSwfUrlStr = "expressInstall.swf",
             playerSwfUrlStr = "swf/player.swf",
             soFlashVars = {
                 src: config.videoUrl,
