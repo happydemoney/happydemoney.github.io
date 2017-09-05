@@ -30,3 +30,6 @@ hs_err_pid*
 *.ts
 
 *.exe
+
+#file
+node_modules/

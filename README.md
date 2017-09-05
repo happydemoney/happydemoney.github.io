@@ -38,15 +38,12 @@
 ```
 ##  How to use
 ```javascript
-<link rel="stylesheet" type="text/css" href="css/videoPlayer.css" />
+<link rel="stylesheet" type="text/css" href="dist/css/videoPlayer.css" />
 
 <div id="videoWrap"></div>
 
-<script type="text/javascript" charset="utf-8" src="js/lib/jquery-1.9.1.js"></script>
-<script type="text/javascript" charset="utf-8" src="js/lib/flv.min.js"></script>
-<script type="text/javascript" charset="utf-8" src="js/lib/hls.min.js"></script>
-<script type="text/javascript" charset="utf-8" src="js/lib/swfobject.js"></script>
-<script type="text/javascript" charset="utf-8" src="js/videoPlayer.js"></script>
+<script type="text/javascript" charset="utf-8" src="http://apps.bdimg.com/libs/jquery/1.9.1/jquery.min.js"></script>
+<script type="text/javascript" charset="utf-8" src="dist/js/videoPlayer.js"></script>
 <script type="text/javascript" charset="utf-8" >
     // 1. on demand(点播)
     $('#videoWrap').videoPlayer({

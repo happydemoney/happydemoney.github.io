@@ -1,3 +1,7 @@
+/**
+ *  @description:   videoPlayer.js
+ *  @version:   v1.0.0
+ */
 (function (factory) {
     if (typeof define === 'function' && define.amd) {
         define(['jquery'], factory);
@@ -16,7 +20,7 @@
 
             var defaultConfig = {
                 // 调试模式
-                debug: true,
+                debug: false,
                 // log print
                 log: function (msg) {
                     if (config.debug) {
@@ -27,6 +31,7 @@
                         }
                     }
                 },
+                vesion: '1.0.0',
                 // 播放器容器
                 playerContainer: el,
                 // 直播(true)还是点播(false)
@@ -52,7 +57,7 @@
             config = $.extend(defaultConfig, config);
 
             // 直播时初始化 videoUrl
-            config.isLive && initVideoUrl(config);
+            if (config.isLive) initVideoUrl(config);
             initPlayer(config);
 
             var _oFunc = {
@@ -97,8 +102,6 @@
             config.videoUrl = config.liveStreamUrl.HLS;
         } else if (config.liveStreamUrl.RTMP && !isTouchDevice) {
             config.videoUrl = config.liveStreamUrl.RTMP;
-        } else {
-            alert('您的浏览器不支持HTML5视频，请更换新版Chrome浏览器');
         }
         // 指定 playerType === Flash
         if (config.playerType === 'Flash' && config.liveStreamUrl.RTMP) {
@@ -110,8 +113,8 @@
     function initPlayer(config) {
 
         if (!config.videoUrl) {
-            config.isLive && alert('直播流为空！');
-            !config.isLive && alert('视频地址未传入！');
+            if (config.isLive) alert('直播流为空！');
+            else alert('视频地址未传入！');
             return;
         }
 
@@ -160,8 +163,8 @@
                 HlsPlayer(config);
                 break;
             default:
-                config.isLive && alert('请传入正确的直播流地址！');
-                !config.isLive && Html5PlayerSource(config);
+                if (config.isLive) alert('请传入正确的直播流地址！');
+                else Html5PlayerSource(config);
                 break;
         }
     }
@@ -175,11 +178,10 @@
             controlsTag = config.controls ? "controls" : "",
             autoplayTag = config.autoplay ? "autoplay" : "",
             // autoplayTag = isTouchDevice && config.autoplay ? "autoplay muted" : "",
-            videoString = '<div class="liveContent">\
-                        <video id="'+ playerId + '" ' + controlsTag + " " + autoplayTag + '>\
-                            Your browser is too old which does not support HTML5 video\
-                        </video >\
-                    </div > ';
+            videoString = '<div class="liveContent">' +
+                '<video id="' + playerId + '" ' + controlsTag + " " + autoplayTag + '>' +
+                'Your browser is too old which does not support HTML5 video' +
+                '</video></div >';
 
         playerContainer.append(videoString);
 
@@ -248,13 +250,13 @@
         if (config.autoplay) {
             player.oncanplay = function () {
                 player.play();
-            }
+            };
         }
         config.player = player;
         // 自定义 destroy
         config.player.destroy = function () {
             player.pause();
-        }
+        };
     }
 
     // Flash播放器    
@@ -283,7 +285,7 @@
         // 自定义 destroy
         config.player.destroy = function () {
             swfobject.removeSWF(playerId);
-        }
+        };
     }
 
     jQuery.fn[pluginName] = function (options) {
