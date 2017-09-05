@@ -13,9 +13,20 @@
 
     var pluginName = 'videoPlayer',
         videoPlayer = function (config, el) {
+
             var defaultConfig = {
                 // 调试模式
-                debug: false,
+                debug: true,
+                // log print
+                log: function (msg) {
+                    if (config.debug) {
+                        if (console.log && !isTouchDevice) {
+                            console.log(msg);
+                        } else {
+                            alert(msg);
+                        }
+                    }
+                },
                 // 播放器容器
                 playerContainer: el,
                 // 直播(true)还是点播(false)
@@ -32,17 +43,16 @@
                     HLS: '',
                     HTTPFLV: ''
                 },
-                // 播放视频源  - .flv - .mp4 - .ts 等等
+                // 播放视频源  - .flv - .mp4 - .m3u8 等等
                 videoUrl: '',
-                // 播放器主体
+                // 播放器对象
                 player: ''
             };
+
             config = $.extend(defaultConfig, config);
-            initVideoUrl(config);
-            if (config.debug) {
-                console.log(config.videoUrl);
-                alert(config.videoUrl);
-            }
+
+            // 直播时初始化 videoUrl
+            config.isLive && initVideoUrl(config);
             initPlayer(config);
 
             var _oFunc = {
@@ -54,101 +64,69 @@
 
             return _oFunc;
         },
+        /*
+         *  视频/视频流类别
+         *  rtmp: Flash播放器(only)
+         *  flv: 基于flv.js的HTML5播放器
+         *  hls: 基于hls.js的HTML5播放器
+         *  html5: video标签原生支持的视频格式 .mp4/.ogg/.webm
+         */
         videoType = {
             rtmp: 'RTMP',
             flv: 'FLV',
             hls: 'HLS',
             html5: 'HTML5'
         },
+        // 视频ID计数
         idCount = {
             Html5: 0,
             Flash: 0
         };
 
+    /**
+     *  直播播放时根据用户浏览器兼容情况选好直播流
+     *  1. 优先选择 基于flv.js 的HTML5播放器播放,播 HTTP-FLV直播流
+     *  2. 其次选择 基于hls.js 的HTML5播放器播放,播 HLS直播流
+     *  3. 最后选择Flash播放器，播RTMP直播流(PC)
+     */
     function initVideoUrl(config) {
-        if (config.isLive) {
-            if (flvjs.isSupported() && config.liveStreamUrl.HTTPFLV) {
-                config.videoUrl = config.liveStreamUrl.HTTPFLV;
-            } else if (Hls.isSupported() && config.liveStreamUrl.HLS) {
-                config.videoUrl = config.liveStreamUrl.HLS;
-            } else if (config.liveStreamUrl.RTMP) {
-                config.videoUrl = config.liveStreamUrl.RTMP;
-            }
-            if (config.playerType === 'Flash' && config.liveStreamUrl.RTMP) {
-                config.videoUrl = config.liveStreamUrl.RTMP;
-            }
+        // 默认 playerType === Html5
+        if (flvjs.isSupported() && config.liveStreamUrl.HTTPFLV) {
+            config.videoUrl = config.liveStreamUrl.HTTPFLV;
+        } else if (Hls.isSupported() && config.liveStreamUrl.HLS) {
+            config.videoUrl = config.liveStreamUrl.HLS;
+        } else if (config.liveStreamUrl.RTMP && !isTouchDevice) {
+            config.videoUrl = config.liveStreamUrl.RTMP;
+        } else {
+            alert('您的浏览器不支持HTML5视频，请更换新版Chrome浏览器');
         }
-    }
-    function initPlayer(config) {
-        if (!config.videoUrl) {
-            alert('请传入视频路径！');
-            return;
+        // 指定 playerType === Flash
+        if (config.playerType === 'Flash' && config.liveStreamUrl.RTMP) {
+            config.videoUrl = config.liveStreamUrl.RTMP;
         }
-        // 1. 直播
-        if (config.isLive) {
-            switch (config.playerType) {
-                case 'Html5':
-                    liveHtml5(config);
-                    break;
-                case 'Flash':
-                    liveFlash(config);
-                    break;
-                default:
-                    liveFlash(config);
-                    break;
-            }
-        }
-        // 2. 点播
-        else {
-            switch (config.playerType) {
-                case 'Html5':
-                    onDemandHtml5(config);
-                    break;
-                case 'Flash':
-                    onDemandFlash(config);
-                    break;
-                default:
-                    onDemandFlash(config);
-                    break;
-            }
-        }
+        config.log('videoUrl = ' + config.videoUrl);
     }
 
-    // liveHtml5 - HTML5直播处理
-    function liveHtml5(config) {
-        switch (getVideoType(config.videoUrl)) {
-            case videoType.flv:
-                loadFlv(config);
-                break;
-            case videoType.hls:
-                loadHls(config);
-                break;
-            default:
-                alert('请传入正确的直播流地址！');
-                break;
+    function initPlayer(config) {
+
+        if (!config.videoUrl) {
+            config.isLive && alert('直播流为空！');
+            !config.isLive && alert('视频地址未传入！');
+            return;
         }
-    }
-    // liveFlash - FLASH直播处理
-    function liveFlash(config) {
-        loadFlash(config);
-    }
-    // onDemandHtml5 - HTML5点播处理
-    function onDemandHtml5(config) {
-        switch (getVideoType(config.videoUrl)) {
-            case videoType.flv:
-                loadFlv(config);
+
+        // 根据播放器类型执行对应的播放方法
+        switch (config.playerType) {
+            case 'Html5':
+            case 'HTML5':
+                Html5Player(config);
                 break;
-            case videoType.hls:
-                loadHls(config);
+            case 'Flash':
+            case 'FLASH':
+                FlashPlayer(config);
                 break;
-            default:
-                loadHtml5(config);
-                break;
+            default: break;
         }
-    }
-    // onDemandFlash - Flash点播处理
-    function onDemandFlash(config) {
-        loadFlash(config);
     }
 
     // getVideoType - 获取视频类型
@@ -172,6 +150,22 @@
         }
     }
 
+    // HTML5播放器    
+    function Html5Player(config) {
+        switch (getVideoType(config.videoUrl)) {
+            case videoType.flv:
+                FlvPlayer(config);
+                break;
+            case videoType.hls:
+                HlsPlayer(config);
+                break;
+            default:
+                config.isLive && alert('请传入正确的直播流地址！');
+                !config.isLive && Html5PlayerSource(config);
+                break;
+        }
+    }
+
     // 初始化播放器结构 并返回生成的播放器DOM ID    
     function initVideoStruct(config) {
 
@@ -192,7 +186,8 @@
         return playerId;
     }
 
-    function loadFlv(config) {
+    // 基于flv.js的html5播放器    
+    function FlvPlayer(config) {
         var playerId = initVideoStruct(config),
             videoDom = document.getElementById(playerId),
             player = flvjs.createPlayer({
@@ -204,8 +199,8 @@
                     //fixAudioTimestampGap: false,
                     //autoCleanupSourceBuffer: true,  // 自动清理MSE内存
                     enableWorker: true,
-                    enableStashBuffer: false,
-                    stashInitialSize: 256   // 减少首桢显示等待时长 默认384
+                    enableStashBuffer: true,
+                    stashInitialSize: 128   // 减少首桢显示等待时长 默认384
                 }
             });
         player.attachMediaElement(videoDom);
@@ -214,7 +209,8 @@
         config.player = player;
     }
 
-    function loadHls(config) {
+    // 基于hls.js的html5播放器        
+    function HlsPlayer(config) {
         var playerId = initVideoStruct(config),
             player = document.getElementById(playerId),
             hls = new Hls();
@@ -242,7 +238,8 @@
         config.player = hls;
     }
 
-    function loadHtml5(config) {
+    // 原生html5播放器          
+    function Html5PlayerSource(config) {
 
         var playerId = initVideoStruct(config),
             player = document.getElementById(playerId);
@@ -260,10 +257,11 @@
         }
     }
 
-    function loadFlash(config) {
+    // Flash播放器    
+    function FlashPlayer(config) {
         var playerId = initVideoStruct(config);
         var swfVersionStr = "10.0.0",
-            xiSwfUrlStr = "expressInstall.swf",
+            xiSwfUrlStr = "swf/expressInstall.swf",
             playerSwfUrlStr = "swf/player.swf",
             soFlashVars = {
                 src: config.videoUrl,
