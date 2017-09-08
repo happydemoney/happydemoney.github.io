@@ -88,10 +88,12 @@ function setStreamUrl() {
             HTTPFLV: 'http://' + hostName + ':' + flvPort + '/' + appName + '/' + streamName + '.flv',
             HLS: 'http://' + hostName + ':' + hlsPort + '/' + appName + '/' + streamName + '.m3u8'
             // HLS: 'http://ivi.bupt.edu.cn/hls/cctv6hd.m3u8'
+            // HLS: 'http://27.152.181.77:490/22490906_22490906_22902_0_0_15013.m3u8?uuid=e27009d73ef642b0b71a1ff13eb28d21&org=yyweb&m=097797f12c8e52a1400fc1ce052efc48&r=331508567&v=1&t=1504764367&uid=0&ex_audio=0&ex_coderate=700&ex_spkuid=0'
         },
         oVideoUrl = {
             flash: 'https://cdn.memorieslab.com//video/mgn_brand_video.mp4',
             flv: 'https://cdn.memorieslab.com//video/mgn_brand_video.mp4',
+            //hls: 'http://ivi.bupt.edu.cn/hls/cctv5hd.m3u8',
             hls: 'http://ivi.bupt.edu.cn/hls/cctv5hd.m3u8'
         };
 

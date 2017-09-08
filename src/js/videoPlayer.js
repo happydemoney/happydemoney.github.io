@@ -11,9 +11,11 @@
 }(function ($) {
 
     // 是否是支持触摸的设备    
-    var isTouchDevice = navigator.userAgent.match(/(iPhone|iPod|iPad|Android|playbook|silk|BlackBerry|BB10|Windows Phone|Tizen|Bada|webOS|IEMobile|Opera Mini)/);
-    // 是否支持触摸事件
-    var isTouch = (('ontouchstart' in window) || (navigator.msMaxTouchPoints > 0) || (navigator.maxTouchPoints));
+    var isTouchDevice = navigator.userAgent.match(/(iPhone|iPod|iPad|Android|playbook|silk|BlackBerry|BB10|Windows Phone|Tizen|Bada|webOS|IEMobile|Opera Mini)/),
+        // 是否支持触摸事件
+        isTouch = (('ontouchstart' in window) || (navigator.msMaxTouchPoints > 0) || (navigator.maxTouchPoints)),
+        // 版本
+        VERSION = '1.0.0';
 
     var pluginName = 'videoPlayer',
         videoPlayer = function (config, el) {
@@ -31,14 +33,14 @@
                         }
                     }
                 },
-                vesion: '1.0.0',
+                vesion: VERSION,
                 // 播放器容器
                 playerContainer: el,
                 // 直播(true)还是点播(false)
                 isLive: false,
                 // 视频加载完是否自动播放
                 autoplay: true,
-                // 是否显示视频控件 - 播放/音量/进度条 - 仅针对HMLT5播放器
+                // HTML5直播时不使用默认播放控制器，点播使用默认控制器
                 controls: true,
                 // 播放器类型
                 playerType: 'Html5',    // Html5 - Flash
@@ -51,7 +53,56 @@
                 // 播放视频源  - .flv - .mp4 - .m3u8 等等
                 videoUrl: '',
                 // 播放器对象
-                player: ''
+                player: undefined,
+                // 播放器源video对象
+                player_source: undefined,
+                // H5播放器事件
+                h5playerEvents: {
+                    fullscreenStatus: false,
+                    // 播放器播放
+                    play: function () {
+                        var $videoParent = $(config.player_source).parent();
+                        if (config.player_source.paused) {
+                            config.player_source.play();
+                            $videoParent.addClass('h5player-status-playing').removeClass('h5player-status-paused');
+                        } else {
+                            config.player_source.pause();
+                            $videoParent.addClass('h5player-status-paused').removeClass('h5player-status-playing');
+                        }
+                    },
+                    // 播放器刷新
+                    refresh: function () {
+
+                    },
+                    // 播放器静音
+                    muted: function () {
+                        var $videoParent = $(config.player_source).parent();
+                        if (config.player_source.muted) {
+                            config.player_source.muted = false;
+                            $videoParent.removeClass('h5player-status-muted');
+                        } else {
+                            config.player_source.muted = true;
+                            $videoParent.addClass('h5player-status-muted');
+                        }
+                    },
+                    // 播放器 声音调节
+                    volumeChange: function () {
+
+                    },
+                    // 播放器全屏
+                    fullscreen: function () {
+                        var $videoParent = $(config.player_source).parent();
+                        if (!$videoParent.hasClass('h5player-status-fullScreen')) {
+                            launchFullScreen(config.player_source);
+                            $videoParent.addClass('h5player-status-fullScreen');
+                            this.fullscreenStatus = true;
+                        } else {
+                            exitFullscreen();
+                            $videoParent.removeClass('h5player-status-fullScreen');
+                            this.fullscreenStatus = false;
+                        }
+                    }
+                }
             };
 
             config = $.extend(defaultConfig, config);
@@ -121,11 +172,9 @@
         // 根据播放器类型执行对应的播放方法
         switch (config.playerType) {
             case 'Html5':
-            case 'HTML5':
                 Html5Player(config);
                 break;
             case 'Flash':
-            case 'FLASH':
                 FlashPlayer(config);
                 break;
             default: break;
@@ -135,8 +184,8 @@
     // getVideoType - 获取视频类型
     function getVideoType(videoUrl) {
 
-        var regHLS = /\.m3u8$/gi,
-            regFLV = /\.flv$/gi,
+        var regHLS = /\.m3u8\?|\.m3u8$/gi,
+            regFLV = /\.flv\?|\.flv$/gi,
             regHTML5 = /\.mp4|\.ogg|\.webm/gi,
             regRTMP = /^rtmp:/gi;
 
@@ -175,17 +224,80 @@
         var playerContainer = config.playerContainer,
             videoIdFormal = config.isLive ? 'live' : 'onDemand',
             playerId = videoIdFormal + config.playerType + '-' + idCount.Html5++,
-            controlsTag = config.controls ? "controls" : "",
+            videoClassName = config.isLive ? 'videoLive' : 'videoOnDemand',
+            controlsTag = (config.controls && !config.isLive) ? "controls" : "",
             autoplayTag = config.autoplay ? "autoplay" : "",
+
+            html5LiveControlString = '<div class="h5player-live-ctrl">' +
+                '<div class="h5player-live-bar">' +
+                '<div class="h5player-ctrl-bar clearfix">' +
+                '<span class="h5player-ctrl-bar-btn btn-play" data-info="播放/暂停"></span>' +
+                '<span class="h5player-ctrl-bar-btn btn-refresh" data-info="刷新"></span>' +
+
+                '<div class="h5player-ctrl-bar-volume-container">' +
+                '<span class="h5player-ctrl-bar-btn btn-volume"></span>' +
+                '<div class="h5player-ctrl-bar-btn h5player-ctrl-bar-volume-slide">' +
+                '<input class="h5player-ctrl-bar-volume-slidebar" type="range" data-info="音量调整"/>' +
+                '</div></div>' +
+                // <div class="h5player-control-bar-volume-container"><span class="h5player-control-bar-btn h5player-control-bar-volume"></span>
+                // <div class="h5player-control-bar-btn h5player-control-bar-volume-slide">
+                //   <div class="h5player-control-bar-volume-slidebar">
+                //     <div class="h5player-control-bar-volume-slidebar-inner" style="width: 66%;"></div>
+                //   </div>
+                //   <span class="h5player-control-bar-volume-slider" style="left: 57.4px;"></span>
+                // </div></div>
+
+                '<span class="h5player-ctrl-bar-btn btn-fullScreen" data-info="全屏"></span>' +
+                // '<span class="h5player-ctrl-bar-btn btn-lines" data-info="线路">线路</span>' +
+                // '<span class="h5player-ctrl-bar-btn btn-kbps" data-info="超清">超清</span>' +
+                // '<span class="h5player-ctrl-bar-btn btn-barrage" data-info="弹幕"></span>' +
+                '</div>' +
+                '</div>' +
+                '</div>',
+            html5LiveControlString = (config.isLive && config.playerType !== 'Flash') ? html5LiveControlString : '',
             // autoplayTag = isTouchDevice && config.autoplay ? "autoplay muted" : "",
-            videoString = '<div class="liveContent">' +
-                '<video id="' + playerId + '" ' + controlsTag + " " + autoplayTag + '>' +
+            videoString = '<div class="liveContent h5player-status-playing">' +
+                '<video class="' + videoClassName + '" id="' + playerId + '" ' + controlsTag + " " + autoplayTag + '>' +
                 'Your browser is too old which does not support HTML5 video' +
-                '</video></div >';
+                '</video>' + html5LiveControlString +
+                '</div>';
+
+        // btn[0].click=function(){
+        //     myVideo.muted=true;(是否静音：是)
+        // }
+        // btn[1].click=function(){
+        //     myVideo.muted=true;(是否静音：否)
+        // }
+        // btn[2].click=function(){
+        //     myVideo.play();(播放)
+        // }
+        // btn[3].click=function(){
+        //     myVideo.pause();(停止播放)
+        // } 
 
         playerContainer.append(videoString);
-
+        initHtml5CtrlEvents(config);
         return playerId;
+    }
+
+    function initHtml5CtrlEvents(config) {
+        config.playerContainer.on('click', '.h5player-ctrl-bar .btn-play', function () {
+            config.h5playerEvents.play();
+        });
+        config.playerContainer.on('click', '.h5player-ctrl-bar .btn-fullScreen', function () {
+            config.h5playerEvents.fullscreen();
+        });
+        config.playerContainer.on('click', '.h5player-ctrl-bar .btn-volume', function () {
+            config.h5playerEvents.muted();
+        });
+
+        window.onresize = function () {
+            var $curLivecontent = config.playerContainer.find('.liveContent');
+            if (config.h5playerEvents.fullscreenStatus && $curLivecontent.hasClass('h5player-status-fullScreen') && !fullscreenElement()) {
+                config.h5playerEvents.fullscreenStatus = false;
+                $curLivecontent.removeClass('h5player-status-fullScreen')
+            }
+        };
     }
 
     // 基于flv.js的html5播放器    
@@ -202,17 +314,19 @@
                     //autoCleanupSourceBuffer: true,  // 自动清理MSE内存
                     enableWorker: true,
                     enableStashBuffer: true,
-                    stashInitialSize: 128   // 减少首桢显示等待时长 默认384
+                    stashInitialSize: 420   // 减少首桢显示等待时长 默认384
                 }
             });
         player.attachMediaElement(videoDom);
         player.load();
 
         config.player = player;
+        config.player_source = videoDom;
     }
 
     // 基于hls.js的html5播放器        
     function HlsPlayer(config) {
+
         var playerId = initVideoStruct(config),
             player = document.getElementById(playerId),
             hls = new Hls();
@@ -238,6 +352,7 @@
         });
 
         config.player = hls;
+        config.player_source = player;
     }
 
     // 原生html5播放器          
@@ -253,6 +368,7 @@
             };
         }
         config.player = player;
+        config.player_source = player;
         // 自定义 destroy
         config.player.destroy = function () {
             player.pause();
@@ -279,13 +395,40 @@
                 quality: 'high',
                 allowscriptaccess: 'sameDomain',
             };
-
         swfobject.embedSWF(playerSwfUrlStr, playerId, "100%", "100%", swfVersionStr, xiSwfUrlStr, soFlashVars, params);
         config.player = swfobject;
         // 自定义 destroy
         config.player.destroy = function () {
             swfobject.removeSWF(playerId);
         };
+    }
+
+    // Find the right method, call on correct element
+    function launchFullScreen(element) {
+        if (element.requestFullScreen) {
+            element.requestFullScreen();
+        } else if (element.mozRequestFullScreen) {
+            element.mozRequestFullScreen();
+        } else if (element.webkitRequestFullScreen) {
+            element.webkitRequestFullScreen();
+        }
+    }
+    // 退出全屏
+    function exitFullscreen() {
+        if (document.exitFullscreen) {
+            document.exitFullscreen();
+        } else if (document.mozCancelFullScreen) {
+            document.mozCancelFullScreen();
+        } else if (document.webkitExitFullscreen) {
+            document.webkitExitFullscreen();
+        }
+    }
+    // 返回全屏的元素对象，注意：要在用户授权全屏后才能获取全屏的元素，否则 fullscreenEle为null
+    function fullscreenElement() {
+        var fullscreenEle = document.fullscreenElement ||
+            document.mozFullScreenElement ||
+            document.webkitFullscreenElement;
+        return fullscreenEle;
     }
 
     jQuery.fn[pluginName] = function (options) {
