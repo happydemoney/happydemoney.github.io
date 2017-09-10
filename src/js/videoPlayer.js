@@ -22,7 +22,7 @@
 
             var defaultConfig = {
                 // 调试模式
-                debug: false,
+                debug: true,
                 // log print
                 log: function (msg) {
                     if (config.debug) {
@@ -237,7 +237,7 @@
                 '<div class="h5player-ctrl-bar-volume-container">' +
                 '<span class="h5player-ctrl-bar-btn btn-volume"></span>' +
                 '<div class="h5player-ctrl-bar-btn h5player-ctrl-bar-volume-slide">' +
-                '<input class="h5player-ctrl-bar-volume-slidebar" type="range" data-info="音量调整"/>' +
+                '<input class="h5player-ctrl-bar-volume-slidebar2" type="range" data-info="音量调整"/>' +
                 '</div></div>' +
                 // <div class="h5player-control-bar-volume-container"><span class="h5player-control-bar-btn h5player-control-bar-volume"></span>
                 // <div class="h5player-control-bar-btn h5player-control-bar-volume-slide">
@@ -435,3 +435,35 @@
         return new videoPlayer(options, this);
     };
 }));
+/**
+ *  RangeSlider
+ *  input[type="range"]样式优化
+ *
+*/
+$.fn.RangeSlider = function (cfg) {
+    this.sliderCfg = {
+        min: cfg && !isNaN(parseFloat(cfg.min)) ? Number(cfg.min) : null,
+        max: cfg && !isNaN(parseFloat(cfg.max)) ? Number(cfg.max) : null,
+        step: cfg && Number(cfg.step) ? cfg.step : 1,
+        callback: cfg && cfg.callback ? cfg.callback : null
+    };
+
+    var $input = $(this);
+    var min = this.sliderCfg.min;
+    var max = this.sliderCfg.max;
+    var step = this.sliderCfg.step;
+    var callback = this.sliderCfg.callback;
+
+    $input.attr('min', min)
+        .attr('max', max)
+        .attr('step', step);
+
+    $input.bind("input", function (e) {
+        $input.attr('value', this.value);
+        $input.css('background', 'linear-gradient(to right, #059CFA, white ' + this.value + '%, white)');
+
+        if ($.isFunction(callback)) {
+            callback(this);
+        }
+    });
+};
