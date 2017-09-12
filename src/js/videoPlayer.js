@@ -14,6 +14,7 @@
     var isTouchDevice = navigator.userAgent.match(/(iPhone|iPod|iPad|Android|playbook|silk|BlackBerry|BB10|Windows Phone|Tizen|Bada|webOS|IEMobile|Opera Mini)/),
         // 是否支持触摸事件
         isTouch = (('ontouchstart' in window) || (navigator.msMaxTouchPoints > 0) || (navigator.maxTouchPoints)),
+        isWebkitBrowser = /webkit/gi.test(navigator.userAgent),
         // 版本
         VERSION = '1.0.0';
 
@@ -57,8 +58,11 @@
                 // 播放器源video对象
                 player_source: undefined,
                 // H5播放器事件
-                h5playerEvents: {
+                h5player: {
+                    // 全屏状态
                     fullscreenStatus: false,
+                    // h5player - volume - object
+                    playerVolumer: undefined,
                     // 播放器播放
                     play: function () {
                         var $videoParent = $(config.player_source).parent();
@@ -72,7 +76,7 @@
                     },
                     // 播放器刷新
                     refresh: function () {
-
+                        refreshPlayer(config);
                     },
                     // 播放器静音
                     muted: function () {
@@ -86,8 +90,11 @@
                         }
                     },
                     // 播放器 声音调节
-                    volumeChange: function () {
-
+                    volumeChange: function (volumeValue) {
+                        config.player_source.volume = volumeValue;
+                        if (config.player_source.muted) {
+                            this.muted();
+                        }
                     },
                     // 播放器全屏
                     fullscreen: function () {
@@ -181,6 +188,26 @@
         }
     }
 
+    // 刷新播放器
+    function refreshPlayer(config) {
+        var isFresh = true;
+        if (!config.videoUrl) {
+            if (config.isLive) alert('直播流为空！');
+            else alert('视频地址未传入！');
+            return;
+        }
+        // 根据播放器类型执行对应的播放方法
+        switch (config.playerType) {
+            case 'Html5':
+                Html5Player(config, isFresh);
+                break;
+            case 'Flash':
+                FlashPlayer(config, isFresh);
+                break;
+            default: break;
+        }
+    }
+
     // getVideoType - 获取视频类型
     function getVideoType(videoUrl) {
 
@@ -203,13 +230,13 @@
     }
 
     // HTML5播放器    
-    function Html5Player(config) {
+    function Html5Player(config, isFresh) {
         switch (getVideoType(config.videoUrl)) {
             case videoType.flv:
-                FlvPlayer(config);
+                FlvPlayer(config, isFresh);
                 break;
             case videoType.hls:
-                HlsPlayer(config);
+                HlsPlayer(config, isFresh);
                 break;
             default:
                 if (config.isLive) alert('请传入正确的直播流地址！');
@@ -224,6 +251,7 @@
         var playerContainer = config.playerContainer,
             videoIdFormal = config.isLive ? 'live' : 'onDemand',
             playerId = videoIdFormal + config.playerType + '-' + idCount.Html5++,
+            volumeSlidebarId = 'volumeSlidebar' + '-' + idCount.Html5++,
             videoClassName = config.isLive ? 'videoLive' : 'videoOnDemand',
             controlsTag = (config.controls && !config.isLive) ? "controls" : "",
             autoplayTag = config.autoplay ? "autoplay" : "",
@@ -237,15 +265,8 @@
                 '<div class="h5player-ctrl-bar-volume-container">' +
                 '<span class="h5player-ctrl-bar-btn btn-volume"></span>' +
                 '<div class="h5player-ctrl-bar-btn h5player-ctrl-bar-volume-slide">' +
-                '<input class="h5player-ctrl-bar-volume-slidebar2" type="range" data-info="音量调整"/>' +
+                '<input id="' + volumeSlidebarId + '" class="h5player-ctrl-bar-volume-slidebar" type="range" min="0" value="100" max="100" data-info="音量调整"/>' +
                 '</div></div>' +
-                // <div class="h5player-control-bar-volume-container"><span class="h5player-control-bar-btn h5player-control-bar-volume"></span>
-                // <div class="h5player-control-bar-btn h5player-control-bar-volume-slide">
-                //   <div class="h5player-control-bar-volume-slidebar">
-                //     <div class="h5player-control-bar-volume-slidebar-inner" style="width: 66%;"></div>
-                //   </div>
-                //   <span class="h5player-control-bar-volume-slider" style="left: 57.4px;"></span>
-                // </div></div>
 
                 '<span class="h5player-ctrl-bar-btn btn-fullScreen" data-info="全屏"></span>' +
                 // '<span class="h5player-ctrl-bar-btn btn-lines" data-info="线路">线路</span>' +
@@ -262,104 +283,168 @@
                 '</video>' + html5LiveControlString +
                 '</div>';
 
-        // btn[0].click=function(){
-        //     myVideo.muted=true;(是否静音：是)
-        // }
-        // btn[1].click=function(){
-        //     myVideo.muted=true;(是否静音：否)
-        // }
-        // btn[2].click=function(){
-        //     myVideo.play();(播放)
-        // }
-        // btn[3].click=function(){
-        //     myVideo.pause();(停止播放)
-        // } 
-
         playerContainer.append(videoString);
         initHtml5CtrlEvents(config);
-        return playerId;
+        return {
+            playerId: playerId,
+            volumeSlidebarId: volumeSlidebarId
+        };
     }
 
     function initHtml5CtrlEvents(config) {
+        // webkit内核浏览器volue slidebar样式初始化
+        var webkitVolumePseudoClassInited = false;
         config.playerContainer.on('click', '.h5player-ctrl-bar .btn-play', function () {
-            config.h5playerEvents.play();
+            config.h5player.play();
+        });
+        config.playerContainer.on('click', '.h5player-ctrl-bar .btn-refresh', function () {
+            config.h5player.refresh();
         });
         config.playerContainer.on('click', '.h5player-ctrl-bar .btn-fullScreen', function () {
-            config.h5playerEvents.fullscreen();
+            config.h5player.fullscreen();
         });
         config.playerContainer.on('click', '.h5player-ctrl-bar .btn-volume', function () {
-            config.h5playerEvents.muted();
+            config.h5player.muted();
+        });
+        /* input range - input事件在IE10尚不支持，可以使用change替代 */
+        config.playerContainer.on('input change', '.h5player-ctrl-bar .h5player-ctrl-bar-volume-slidebar', function () {
+
+            var $this = $(this),
+                thisValue = $this.val();
+            config.h5player.volumeChange(thisValue / 100);
+            if (isWebkitBrowser) {
+                _initVolumePseudoClassStyle('.h5player-ctrl-bar-volume-slidebar');
+                $this.attr('data-process', thisValue);
+            }
         });
 
         window.onresize = function () {
             var $curLivecontent = config.playerContainer.find('.liveContent');
-            if (config.h5playerEvents.fullscreenStatus && $curLivecontent.hasClass('h5player-status-fullScreen') && !fullscreenElement()) {
-                config.h5playerEvents.fullscreenStatus = false;
-                $curLivecontent.removeClass('h5player-status-fullScreen')
+            if (config.h5player.fullscreenStatus && $curLivecontent.hasClass('h5player-status-fullScreen') && !fullscreenElement()) {
+                config.h5player.fullscreenStatus = false;
+                $curLivecontent.removeClass('h5player-status-fullScreen');
             }
         };
+
+        // 只针对webkit内核的浏览器
+        function _initVolumePseudoClassStyle(selecter) {
+            if (webkitVolumePseudoClassInited) return;
+            var newStyle = '<style>';
+
+            for (var i = 0; i <= 100; i++) {
+                newStyle += selecter + '[data-process="' + i + '"]:after{';
+                newStyle += 'background: linear-gradient(to right, #1CD388 ' + (i - 1 < 0 ? 0 : i - 1) + '%, #b9b9b9 ' + i + '%,#b9b9b9);}';
+            }
+
+            newStyle += '</style>';
+            $(newStyle).appendTo('head');
+            webkitVolumePseudoClassInited = true;
+        }
     }
 
     // 基于flv.js的html5播放器    
-    function FlvPlayer(config) {
-        var playerId = initVideoStruct(config),
-            videoDom = document.getElementById(playerId),
-            player = flvjs.createPlayer({
-                type: 'flv',
-                isLive: config.isLive,
-                cors: config.isLive,
-                url: config.videoUrl,
-                Config: {
-                    //fixAudioTimestampGap: false,
-                    //autoCleanupSourceBuffer: true,  // 自动清理MSE内存
-                    enableWorker: true,
-                    enableStashBuffer: true,
-                    stashInitialSize: 420   // 减少首桢显示等待时长 默认384
-                }
-            });
-        player.attachMediaElement(videoDom);
-        player.load();
+    function FlvPlayer(config, isFresh) {
 
-        config.player = player;
-        config.player_source = videoDom;
+        // 播放器刷新处理
+        if (isFresh) {
+            config.player.detachMediaElement(config.player_source);
+            config.player.unload();
+
+            config.player.attachMediaElement(config.player_source);
+            config.player.load();
+        } else {
+            var oIds = initVideoStruct(config),
+                videoDom = document.getElementById(oIds.playerId),
+                volumeSlidebar = document.getElementById(oIds.volumeSlidebarId),
+                player = flvjs.createPlayer({
+                    type: 'flv',
+                    isLive: config.isLive,
+                    cors: config.isLive,
+                    url: config.videoUrl,
+                    Config: {
+                        //fixAudioTimestampGap: false,
+                        //autoCleanupSourceBuffer: true,  // 自动清理MSE内存
+                        enableWorker: true,
+                        enableStashBuffer: true,
+                        stashInitialSize: 250   // 减少首桢显示等待时长 默认384
+                    }
+                });
+            player.attachMediaElement(videoDom);
+            player.load();
+
+            config.player = player;
+            config.player_source = videoDom;
+            config.h5player.playerVolumer = volumeSlidebar;
+        }
     }
 
     // 基于hls.js的html5播放器        
-    function HlsPlayer(config) {
+    function HlsPlayer(config, isFresh) {
 
-        var playerId = initVideoStruct(config),
-            player = document.getElementById(playerId),
-            hls = new Hls();
+        // 播放器刷新处理
+        if (isFresh) {
 
-        hls.loadSource(config.videoUrl);
-        hls.attachMedia(player);
-        hls.on(Hls.Events.MANIFEST_PARSED, function () {
-            player.play();
-        });
-        hls.on(Hls.Events.ERROR, function (event, data) {
-            switch (data.type) {
-                case Hls.ErrorTypes.MEDIA_ERROR:
-                    console.log("MEDIA error ...");
-                    hls.destroy();
-                    break;
-                case Hls.ErrorTypes.NETWORK_ERROR:
-                    console.log("network error ...");
-                    break;
-                default:
-                    _hls.destroy();
-                    break;
-            }
-        });
+            config.player.detachMedia();
+            // config.player_source
 
-        config.player = hls;
-        config.player_source = player;
+            config.player.loadSource(config.videoUrl);
+            config.player.attachMedia(config.player_source);
+            config.player.on(Hls.Events.MANIFEST_PARSED, function () {
+                config.player_source.play();
+            });
+            config.player.on(Hls.Events.ERROR, function (event, data) {
+                switch (data.type) {
+                    case Hls.ErrorTypes.MEDIA_ERROR:
+                        console.log("MEDIA error ...");
+                        hls.destroy();
+                        break;
+                    case Hls.ErrorTypes.NETWORK_ERROR:
+                        console.log("network error ...");
+                        break;
+                    default:
+                        _hls.destroy();
+                        break;
+                }
+            });
+        } else {
+            var oIds = initVideoStruct(config),
+                player = document.getElementById(oIds.playerId),
+                volumeSlidebar = document.getElementById(oIds.volumeSlidebarId),
+                hls = new Hls();
+
+            hls.loadSource(config.videoUrl);
+            hls.attachMedia(player);
+            hls.on(Hls.Events.MANIFEST_PARSED, function () {
+                player.play();
+            });
+            hls.on(Hls.Events.ERROR, function (event, data) {
+                switch (data.type) {
+                    case Hls.ErrorTypes.MEDIA_ERROR:
+                        console.log("MEDIA error ...");
+                        hls.destroy();
+                        break;
+                    case Hls.ErrorTypes.NETWORK_ERROR:
+                        console.log("network error ...");
+                        break;
+                    default:
+                        _hls.destroy();
+                        break;
+                }
+            });
+
+            config.player = hls;
+            config.player_source = player;
+            config.h5player.playerVolumer = volumeSlidebar;
+        }
     }
 
     // 原生html5播放器          
-    function Html5PlayerSource(config) {
+    function Html5PlayerSource(config, isFresh) {
 
-        var playerId = initVideoStruct(config),
-            player = document.getElementById(playerId);
+        var oIds = initVideoStruct(config),
+            player = document.getElementById(oIds.playerId),
+            volumeSlidebar = document.getElementById(oIds.volumeSlidebarId);
+
         player.src = config.videoUrl;
 
         if (config.autoplay) {
@@ -369,6 +454,7 @@
         }
         config.player = player;
         config.player_source = player;
+        config.h5player.playerVolumer = volumeSlidebar;
         // 自定义 destroy
         config.player.destroy = function () {
             player.pause();
@@ -376,8 +462,9 @@
     }
 
     // Flash播放器    
-    function FlashPlayer(config) {
-        var playerId = initVideoStruct(config);
+    function FlashPlayer(config, isFresh) {
+        var oIds = initVideoStruct(config),
+            playerId = oIds.playerId;
         var swfVersionStr = "10.0.0",
             xiSwfUrlStr = "swf/expressInstall.swf",
             playerSwfUrlStr = "swf/player.swf",
@@ -431,39 +518,16 @@
         return fullscreenEle;
     }
 
+    function fullscreenEnable() {
+        var isFullscreen = document.fullscreenEnabled ||
+            window.fullScreen ||
+            document.webkitIsFullScreen ||
+            document.msFullscreenEnabled;
+        //注意：要在用户授权全屏后才能准确获取当前的状态
+        return Boolean(isFullscreen);
+    }
+
     jQuery.fn[pluginName] = function (options) {
         return new videoPlayer(options, this);
     };
 }));
-/**
- *  RangeSlider
- *  input[type="range"]样式优化
- *
-*/
-$.fn.RangeSlider = function (cfg) {
-    this.sliderCfg = {
-        min: cfg && !isNaN(parseFloat(cfg.min)) ? Number(cfg.min) : null,
-        max: cfg && !isNaN(parseFloat(cfg.max)) ? Number(cfg.max) : null,
-        step: cfg && Number(cfg.step) ? cfg.step : 1,
-        callback: cfg && cfg.callback ? cfg.callback : null
-    };
-
-    var $input = $(this);
-    var min = this.sliderCfg.min;
-    var max = this.sliderCfg.max;
-    var step = this.sliderCfg.step;
-    var callback = this.sliderCfg.callback;
-
-    $input.attr('min', min)
-        .attr('max', max)
-        .attr('step', step);
-
-    $input.bind("input", function (e) {
-        $input.attr('value', this.value);
-        $input.css('background', 'linear-gradient(to right, #059CFA, white ' + this.value + '%, white)');
-
-        if ($.isFunction(callback)) {
-            callback(this);
-        }
-    });
-};

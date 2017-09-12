@@ -37,8 +37,8 @@
     position: absolute;
     left: 0;
     right: 0;
-    /* bottom: -40px; */
-    bottom: 0px;
+    bottom: -40px;
+    /* bottom: 0px; */
     height: 100%;
     background-color: rgba(43,43,43,.8);
     -webkit-transition: all 300ms ease-in;
@@ -68,7 +68,6 @@
     background-position:-30px 0;;
 }
 /* h5player-status-paused  */
-
 .h5player-status-playing .h5player-ctrl-bar-btn.btn-play{
     background-position:-60px 0;;
 }
@@ -138,93 +137,96 @@
 .h5player-status-muted .h5player-ctrl-bar-btn.btn-volume:hover{
     background-position: -90px -30px;
 }
+/* h5player volume sliderbar */
 .h5player-ctrl-bar .h5player-ctrl-bar-volume-slide{
     width: 100px;
+    height: 30px;
+    background-image: none; 
     margin-left: 0;
-    background-image: none;
-}
-/* .h5player-ctrl-bar-volume-slidebar - chrome */
-.h5player-ctrl-bar-volume-slide .h5player-ctrl-bar-volume-slidebar{
-    -webkit-appearance: none;
-    width: 100px;
-    height: 4px;
-    position: relative;
-    top: -3px;
-}
-.h5player-ctrl-bar-volume-slidebar::-webkit-slider-runnable-track{
-    height: 4px;
-    background-color: #b9b9b9;
-}
-.h5player-ctrl-bar-volume-slidebar:focus::-webkit-slider-runnable-track { 
-    background-color: #367ebd; 
-}
-.h5player-ctrl-bar-volume-slidebar::-moz-range-track{
-    height: 4px;
-    background-color: #b9b9b9;
-    /*box-shadow: 0 1px 1px #def3f8, inset 0 .125em .125em #0d1112;*/ /*轨道内置阴影效果*/
-}
-.h5player-ctrl-bar-volume-slidebar::-ms-track {
-    height: 4px;
-    /* box-shadow: 0 1px 1px #def3f8, inset 0 .125em .125em #0d1112; */
-    border-color: transparent; /*去除原有边框*/
-    color: transparent; /*去除轨道内的竖线*/
-}
-/* 滑块的样式 */
-.h5player-ctrl-bar-volume-slidebar::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    height: 10px;
-    width: 10px;
-    margin-top: -3px; /*使滑块超出轨道部分的偏移量相等*/
-    background: #ffffff; 
-    border-radius: 10px; /*外观设置为圆形*/
-    border: none;
-    /*border: solid 0.125em rgba(205, 224, 230, 0.5);*/ /*设置边框*/
-    /*box-shadow: 0 .125em .125em #3b4547;*/ /*添加底部阴影*/
-}    
-.h5player-ctrl-bar-volume-slidebar::-moz-range-thumb{
-    height: 10px;
-    width: 10px;
-    margin-top: -3px; /*使滑块超出轨道部分的偏移量相等*/
-    background: #ffffff; 
-    border-radius: 10px; /*外观设置为圆形*/
-}
-.h5player-ctrl-bar-volume-slidebar::-ms-thumb {
-    height: 10px;
-    width: 10px;
-    margin-top: -3px;
-    border-radius: 10px;
-    background: #ffffff;
-    border: solid 0.125em rgba(205, 224, 230, 0.5); 
-}
-.h5player-ctrl-bar-volume-slidebar:focus {
-    outline: none;
-}
-/* .h5player-ctrl-bar-volume-slidebar - Firefox */
-.h5player-ctrl-bar-volume-slidebar::-moz-range-progress {
-    background-color: #1cd388;
-    /* background: linear-gradient(to right, #1cd388, #1cd388 100%, #1cd388); */
-    height: 4px;    
-}
-/* .h5player-ctrl-bar-volume-slidebar - IE9+ */
-.h5player-ctrl-bar-volume-slidebar::-ms-fill-lower {
-    /*进度条已填充的部分*/
-    height: 4px;
-    background-color: #1cd388;
-    /* background: linear-gradient(to right, #1cd388, #1cd388 100%, #1cd388); */
-}
-.h5player-ctrl-bar-volume-slidebar::-ms-fill-upper {
-    /*进度条未填充的部分*/
-    height: 4px;
-    background-color: #ffffff;
-}
-.h5player-ctrl-bar-volume-slidebar:focus::-ms-fill-lower {
-    background-color: #1cd388;
-    /* background: linear-gradient(to right, #059CFA, white 100%, white); */
-}
-.h5player-ctrl-bar-volume-slidebar:focus::-ms-fill-upper {
-    background: #ffffff;
 }
 
+.h5player-ctrl-bar-volume-slide input[type=range] {
+    position: relative;
+    -webkit-appearance: none;
+    width: 100%;
+    height: 30px;
+    padding: 0;
+    margin: 0;
+    outline: none;
+    background-color: transparent;
+    cursor: pointer;
+}
+.h5player-ctrl-bar-volume-slidebar:after{
+    content: ' ';
+    position: absolute;
+    top: 13px;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: linear-gradient(to right, #1CD388 98%, #b9b9b9 100%,#b9b9b9);
+}
+/*
+.h5player-ctrl-bar-volume-slidebar[data-process="100"]:after{background: linear-gradient(to right, #1CD388 98%, #b9b9b9 100%,#b9b9b9);}
+*/
+.h5player-status-muted .h5player-ctrl-bar-volume-slide input[type=range]{
+    -ms-filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=50);
+    filter: alpha(opacity=50);
+    opacity: .5;
+}
+.h5player-ctrl-bar-volume-slide input[type=range]::-webkit-slider-runnable-track{
+    height: 4px;
+    background-color: transparent;
+    z-index: 1;     /* 覆盖在 after伪类之上 */
+}
+.h5player-ctrl-bar-volume-slide input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    background-color: #fff;
+    width: 12px;
+    height: 12px;
+    /* border: 1px solid #fff; */
+    border-radius: 50%;
+    margin-top: -4px;
+}
+
+.h5player-ctrl-bar-volume-slide input[type=range]::-moz-range-track {
+    border: none;
+    height: 4px;
+    background-color: #b9b9b9;
+}
+
+.h5player-ctrl-bar-volume-slide input[type=range]::-moz-range-thumb {
+    background-color: #fff;
+    height: 12px;
+    width: 12px;
+    /* border: 1px solid #fff; */
+    border-radius: 50%;
+}
+.h5player-ctrl-bar-volume-slide input[type=range]::-moz-range-progress {
+    height: 4px;
+    background-color: #1cd388;
+}
+
+.h5player-ctrl-bar-volume-slide input[type=range]::-ms-track {
+    height: 4px;
+    background-color: #b9b9b9;
+    border: none;
+    color: transparent;
+    margin: 0;
+}
+
+.h5player-ctrl-bar-volume-slide input[type=range]::-ms-thumb {
+    background-color: #fff;
+    height: 10px;
+    width: 10px;
+    /* border: 1px solid #fff; */
+    border-radius: 50%;
+}
+.h5player-ctrl-bar-volume-slide input[type=range]::-ms-fill-lower{
+    background-color: #1cd388;
+}
+.h5player-ctrl-bar-volume-slide input[type=range]::-ms-fill-upper{
+    background-color: #b9b9b9;
+}
 
 .clearfix:before,
 .clearfix:after {
@@ -246,20 +248,3 @@ video.videoLive::-webkit-media-controls-enclosure {
         background-size: 5.625rem auto;
     }
 }
-
-input[type=range] { -webkit-appearance: none; margin: 18px 0; width: 100%; } 
-input[type=range]:focus { outline: none; } 
-/* webkit */
-input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 8.4px; cursor: pointer; animate: 0.2s; box-shadow: 1px 1px 1px #000000, 0px 0px 1px #0d0d0d; background: #3071a9; border-radius: 1.3px; border: 0.2px solid #010101; } 
-input[type=range]::-webkit-slider-thumb { box-shadow: 1px 1px 1px #000000, 0px 0px 1px #0d0d0d; border: 1px solid #000000; height: 36px; width: 16px; border-radius: 3px; background: #ffffff; cursor: pointer; -webkit-appearance: none; margin-top: -14px; } 
-input[type=range]:focus::-webkit-slider-runnable-track { background: #367ebd; } 
-/* mozilla */
-input[type=range]::-moz-range-track { width: 100%; height: 8.4px; cursor: pointer; animate: 0.2s; box-shadow: 1px 1px 1px #000000, 0px 0px 1px #0d0d0d; background: #3071a9; border-radius: 1.3px; border: 0.2px solid #010101; } 
-input[type=range]::-moz-range-thumb { box-shadow: 1px 1px 1px #000000, 0px 0px 1px #0d0d0d; border: 1px solid #000000; height: 36px; width: 16px; border-radius: 3px; background: #ffffff; cursor: pointer; } 
-/* microsoft */
-input[type=range]::-ms-track { width: 100%; height: 8.4px; cursor: pointer; animate: 0.2s; background: transparent; border-color: transparent; border-width: 16px 0; color: transparent; } 
-input[type=range]::-ms-fill-lower { background: #2a6495; border: 0.2px solid #010101; border-radius: 2.6px; box-shadow: 1px 1px 1px #000000, 0px 0px 1px #0d0d0d; } 
-input[type=range]::-ms-fill-upper { background: #3071a9; border: 0.2px solid #010101; border-radius: 2.6px; box-shadow: 1px 1px 1px #000000, 0px 0px 1px #0d0d0d; } 
-input[type=range]::-ms-thumb { box-shadow: 1px 1px 1px #000000, 0px 0px 1px #0d0d0d; border: 1px solid #000000; height: 36px; width: 16px; border-radius: 3px; background: #ffffff; cursor: pointer; } 
-input[type=range]:focus::-ms-fill-lower { background: #3071a9; } 
-input[type=range]:focus::-ms-fill-upper { background: #367ebd; }
