@@ -98,9 +98,9 @@
                     },
                     // 播放器全屏
                     fullscreen: function () {
-                        var $videoParent = $(config.player_source).parent();
+                        var $videoParent = $(config.player_source).parents('.videoContainer');
                         if (!$videoParent.hasClass('h5player-status-fullScreen')) {
-                            launchFullScreen(config.player_source);
+                            launchFullScreen($videoParent.get(0));
                             $videoParent.addClass('h5player-status-fullScreen');
                             this.fullscreenStatus = true;
                         } else {
@@ -121,7 +121,7 @@
             var _oFunc = {
                 destroy: function () {
                     config.player.destroy();
-                    config.playerContainer.find('.liveContent').remove();
+                    config.playerContainer.find('.videoContainer ').remove();
                 }
             };
 
@@ -277,11 +277,12 @@
                 '</div>',
             html5LiveControlString = (config.isLive && config.playerType !== 'Flash') ? html5LiveControlString : '',
             // autoplayTag = isTouchDevice && config.autoplay ? "autoplay muted" : "",
-            videoString = '<div class="liveContent h5player-status-playing">' +
+
+            videoString = '<div class="videoContainer"><div class="liveContent h5player-status-playing">' +
                 '<video class="' + videoClassName + '" id="' + playerId + '" ' + controlsTag + " " + autoplayTag + '>' +
                 'Your browser is too old which does not support HTML5 video' +
                 '</video>' + html5LiveControlString +
-                '</div>';
+                '</div></div>';
 
         playerContainer.append(videoString);
         initHtml5CtrlEvents(config);
@@ -318,14 +319,13 @@
             }
         });
 
-        window.onresize = function () {
-            var $curLivecontent = config.playerContainer.find('.liveContent');
-            if (config.h5player.fullscreenStatus && $curLivecontent.hasClass('h5player-status-fullScreen') && !fullscreenElement()) {
+        $(document).on('webkitfullscreenchange mozfullscreenchange MSFullscreenChange fullscreenchange', function () {
+            var $videoContainer = config.playerContainer.find('.videoContainer ');
+            if (config.h5player.fullscreenStatus && $videoContainer.hasClass('h5player-status-fullScreen') && !fullscreenElement()) {
                 config.h5player.fullscreenStatus = false;
-                $curLivecontent.removeClass('h5player-status-fullScreen');
+                $videoContainer.removeClass('h5player-status-fullScreen');
             }
-        };
-
+        });
         // 只针对webkit内核的浏览器
         function _initVolumePseudoClassStyle(selecter) {
             if (webkitVolumePseudoClassInited) return;
@@ -366,7 +366,7 @@
                         //autoCleanupSourceBuffer: true,  // 自动清理MSE内存
                         enableWorker: true,
                         enableStashBuffer: true,
-                        stashInitialSize: 250   // 减少首桢显示等待时长 默认384
+                        stashInitialSize: 128   // 减少首桢显示等待时长 默认384
                     }
                 });
             player.attachMediaElement(videoDom);
@@ -498,6 +498,8 @@
             element.mozRequestFullScreen();
         } else if (element.webkitRequestFullScreen) {
             element.webkitRequestFullScreen();
+        } else if (element.msRequestFullscreen) {
+            element.msRequestFullscreen();
         }
     }
     // 退出全屏
@@ -508,13 +510,16 @@
             document.mozCancelFullScreen();
         } else if (document.webkitExitFullscreen) {
             document.webkitExitFullscreen();
+        } else if (document.msExitFullscreen) {
+            document.msExitFullscreen();
         }
     }
     // 返回全屏的元素对象，注意：要在用户授权全屏后才能获取全屏的元素，否则 fullscreenEle为null
     function fullscreenElement() {
         var fullscreenEle = document.fullscreenElement ||
             document.mozFullScreenElement ||
-            document.webkitFullscreenElement;
+            document.webkitFullscreenElement ||
+            document.msFullscreenElement;
         return fullscreenEle;
     }
 
