@@ -15,8 +15,11 @@
         // 是否支持触摸事件
         isTouch = (('ontouchstart' in window) || (navigator.msMaxTouchPoints > 0) || (navigator.maxTouchPoints)),
         isWebkitBrowser = /webkit/gi.test(navigator.userAgent),
-        // 版本
-        VERSION = '1.0.0';
+        isIE11Browser = /rv/gi.test(navigator.userAgent) && /trident/gi.test(navigator.userAgent),
+        isEdgeBrowser = /edge/gi.test(navigator.userAgent) && /trident/gi.test(navigator.userAgent);
+
+    // 版本
+    VERSION = '1.0.0';
 
     var pluginName = 'videoPlayer',
         videoPlayer = function (config, el) {
@@ -153,8 +156,8 @@
      *  3. 最后选择Flash播放器，播RTMP直播流(PC)
      */
     function initVideoUrl(config) {
-        // 默认 playerType === Html5
-        if (flvjs.isSupported() && config.liveStreamUrl.HTTPFLV) {
+        // 默认 playerType === Html5, IE11 / Edge 暂不支持 flv.js直播播放，但支持flv.js点播播放
+        if (flvjs.isSupported() && config.liveStreamUrl.HTTPFLV && !isIE11Browser && !isEdgeBrowser) {
             config.videoUrl = config.liveStreamUrl.HTTPFLV;
         } else if (Hls.isSupported() && config.liveStreamUrl.HLS) {
             config.videoUrl = config.liveStreamUrl.HLS;
