@@ -44,8 +44,10 @@
                 isLive: false,
                 // 视频加载完是否自动播放
                 autoplay: true,
-                // HTML5直播时不使用默认播放控制器，点播使用默认控制器
+                // HTML5播放器是否显示
                 controls: true,
+                // 是否使用默认HTML5播放器
+                isDefaultControls: false,
                 // 播放器类型
                 playerType: 'Html5',    // Html5 - Flash
                 // 直播视频流 rtmp视频流 - http-flv视频流 - hls分片视频索引文件(m3u8)
@@ -111,6 +113,54 @@
                             $videoParent.removeClass('h5player-status-fullScreen');
                             this.fullscreenStatus = false;
                         }
+                    },
+                    // 视频进度更新
+                    ontimeupdate: function (e, setValue) {
+                        // console.log(setValue);
+
+                        var duration = config.player_source.duration;
+
+                        if (setValue) {
+                            config.player_source.currentTime = Math.floor(setValue * duration);
+                        }
+
+                        var $progressLoad = config.playerContainer.find('.h5player-progress-load'),
+                            $progressPlay = config.playerContainer.find('.h5player-progress-play'),
+                            $progressBtnScrubber = config.playerContainer.find('.h5player-progress-btn-scrubber'),
+                            currentTime = config.player_source.currentTime,
+                            buffered = config.player_source.buffered,
+                            nearLoadedTime = 0;
+
+                        for (var i = 0; i < buffered.length; i++) {
+                            if (buffered.end(i) > currentTime) {
+                                nearLoadedTime = buffered.end(i);
+                            }
+                        }
+                        // 更新加载视频进度
+                        $progressLoad.css({
+                            width: (nearLoadedTime / duration) * 100 + '%'
+                        });
+                        // 更新播放视频进度
+                        $progressPlay.css({
+                            width: (currentTime / duration) * 100 + '%'
+                        });
+                        // 进度条小圆点
+                        $progressBtnScrubber.css({
+                            left: (currentTime / duration) * 100 + '%'
+                        });
+                    },
+                    // 视频播放到结尾
+                    onended: function () {
+                        var $videoParent = $(config.player_source).parent();
+                        if (!config.player_source.paused) {
+                            config.player_source.pause();
+                        }
+                        $videoParent.addClass('h5player-status-paused').removeClass('h5player-status-playing');
+                    },
+                    // 更新视频进度
+                    onloadeddata: function () {
+                        config.player_source.ontimeupdate = config.h5player.ontimeupdate;
+                        config.player_source.onended = config.h5player.onended;
                     }
                 }
             };
@@ -256,10 +306,12 @@
             playerId = videoIdFormal + config.playerType + '-' + idCount.Html5++,
             volumeSlidebarId = 'volumeSlidebar' + '-' + idCount.Html5++,
             videoClassName = config.isLive ? 'videoLive' : 'videoOnDemand',
-            controlsTag = (config.controls && !config.isLive) ? "controls" : "",
+            controlsTag = (config.controls && config.isDefaultControls) ? 'controls' : '',
             autoplayTag = config.autoplay ? "autoplay" : "",
+            html5ControlString_live,    // 直播播放控制器字符串
+            html5ControlString_onDemond,    // 点播播放控制器字符串
 
-            html5LiveControlString = '<div class="h5player-live-ctrl">' +
+            html5ControlString_live = '<div class="h5player-live-ctrl">' +
                 '<div class="h5player-live-bar">' +
                 '<div class="h5player-ctrl-bar clearfix">' +
                 '<span class="h5player-ctrl-bar-btn btn-play" data-info="播放/暂停"></span>' +
@@ -275,16 +327,33 @@
                 // '<span class="h5player-ctrl-bar-btn btn-lines" data-info="线路">线路</span>' +
                 // '<span class="h5player-ctrl-bar-btn btn-kbps" data-info="超清">超清</span>' +
                 // '<span class="h5player-ctrl-bar-btn btn-barrage" data-info="弹幕"></span>' +
-                '</div>' +
-                '</div>' +
-                '</div>',
-            html5LiveControlString = (config.isLive && config.playerType !== 'Flash') ? html5LiveControlString : '',
-            // autoplayTag = isTouchDevice && config.autoplay ? "autoplay muted" : "",
+                '</div></div></div>',
 
+            html5ControlString_onDemond = '<div class="h5player-live-ctrl">' +
+                '<div class="h5player-live-bar">' +
+                '<div class="h5player-progress-bar-container">' +
+                '<div class="h5player-progress-list">' +
+                '<div class="h5player-progress-load"></div>' +
+                '<div class="h5player-progress-play"></div></div>' +
+                '<div class="h5player-progress-btn-scrubber">' +
+                '<div class="h5player-progress-btn-scrubber-indicator"></div></div></div>' +
+                '<div class="h5player-ctrl-bar clearfix">' +
+                '<span class="h5player-ctrl-bar-btn btn-play" data-info="播放/暂停"></span>' +
+                '<div class="h5player-ctrl-bar-volume-container">' +
+                '<span class="h5player-ctrl-bar-btn btn-volume"></span>' +
+                '<div class="h5player-ctrl-bar-btn h5player-ctrl-bar-volume-slide">' +
+                '<input id="' + volumeSlidebarId + '" class="h5player-ctrl-bar-volume-slidebar" type="range" min="0" value="100" max="100" data-info="音量调整"/>' +
+                '</div></div>' +
+
+                '<span class="h5player-ctrl-bar-btn btn-fullScreen" data-info="全屏"></span>' +
+                '</div></div></div>',
+
+            html5ControlString = config.playerType !== 'Flash' ? (config.isLive ? html5ControlString_live : html5ControlString_onDemond) : '',
+            // autoplayTag = isTouchDevice && config.autoplay ? "autoplay muted" : "",
             videoString = '<div class="videoContainer"><div class="liveContent h5player-status-playing">' +
                 '<video class="' + videoClassName + '" id="' + playerId + '" ' + controlsTag + " " + autoplayTag + '>' +
                 'Your browser is too old which does not support HTML5 video' +
-                '</video>' + html5LiveControlString +
+                '</video>' + html5ControlString +
                 '</div></div>';
 
         playerContainer.append(videoString);
@@ -309,6 +378,24 @@
         });
         config.playerContainer.on('click', '.h5player-ctrl-bar .btn-volume', function () {
             config.h5player.muted();
+        });
+        config.playerContainer.on('mousedown', '.h5player-live-ctrl .h5player-progress-bar-container', function (e) {
+            var $this = $(this),
+                thisWidth = $this.width(),
+                isOneClick = true;
+
+            config.h5player.ontimeupdate(e, e.offsetX / thisWidth);
+
+            $this.on('mousemove', function (e) {
+                if (isOneClick) {
+                    config.h5player.ontimeupdate(e, e.offsetX / thisWidth);
+                }
+            });
+
+            $this.one('mouseup', function (e) {
+                isOneClick = false;
+                $this.off('mousemove');
+            });
         });
         /* input range - input事件在IE10尚不支持，可以使用change替代 */
         config.playerContainer.on('input change', '.h5player-ctrl-bar .h5player-ctrl-bar-volume-slidebar', function () {
@@ -462,6 +549,8 @@
         config.player.destroy = function () {
             player.pause();
         };
+
+        player.onloadeddata = config.h5player.onloadeddata;
     }
 
     // Flash播放器    

@@ -92,10 +92,11 @@ function setStreamUrl() {
         },
         oVideoUrl = {
             flash: 'https://cdn.memorieslab.com//video/mgn_brand_video.mp4',
-            // flv: 'https://cdn.memorieslab.com//video/mgn_brand_video.mp4',
-            flv: 'http://' + hostName + ':' + onDemandPort + '/videoTest/demo.flv',
-            //hls: 'http://ivi.bupt.edu.cn/hls/cctv5hd.m3u8',
-            hls: 'http://ivi.bupt.edu.cn/hls/cctv5hd.m3u8'
+            // flv: 'http://' + hostName + ':' + onDemandPort + '/videoTest/demo.flv',
+            flv: 'https://cdn.memorieslab.com//video/mgn_brand_video.mp4',
+            // flv: 'http://' + hostName + ':' + onDemandPort + '/videoTest/神奇女侠.mp4',
+            // hls: 'http://ivi.bupt.edu.cn/hls/cctv5hd.m3u8'
+            hls: 'http://' + hostName + ':' + onDemandPort + '/videoTest/m3u8/xmpolice.m3u8',
         };
 
     window.liveStreamUrl = liveStreamUrl;
