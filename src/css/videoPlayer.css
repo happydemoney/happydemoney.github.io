@@ -82,12 +82,13 @@
     display: none;
     width: 10px;
     height: 10px;
-    top: 0px;
+    top: 3px;
     margin-left: -5px;
     cursor: pointer;
 }
 .h5player-progress-bar-container:hover .h5player-progress-btn-scrubber{
     display: block;
+    top: 0px;
 }
 .h5player-progress-btn-scrubber .h5player-progress-btn-scrubber-indicator{
     position: relative;

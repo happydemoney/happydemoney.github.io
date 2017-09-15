@@ -114,40 +114,71 @@
                             this.fullscreenStatus = false;
                         }
                     },
-                    // 视频进度更新
-                    ontimeupdate: function (e, setValue) {
-                        // console.log(setValue);
+                    /**
+                     * params {
+                     *  currentTime
+                     *  loadedTime
+                     *  isSeek
+                     *  currentTimePercent
+                     * }
+                     */
+                    progressChange: function (oTime) {
+                        var $progressPlay = config.playerContainer.find('.h5player-progress-play'),
+                            $progressBtnScrubber = config.playerContainer.find('.h5player-progress-btn-scrubber'),
+                            $progressLoad = config.playerContainer.find('.h5player-progress-load'),
+                            duration = config.player_source.duration,
+                            currentTime = oTime.currentTime,
+                            currentTimePercent = oTime.currentTimePercent,
+                            loadedTime = oTime.loadedTime,
+                            isSeek = oTime.isSeek;
 
-                        var duration = config.player_source.duration;
-
-                        if (setValue) {
-                            config.player_source.currentTime = Math.floor(setValue * duration);
+                        if (isSeek) {
+                            currentTime = Math.round(oTime.currentTimePercent * duration);
+                            config.player_source.currentTime = currentTime;
                         }
 
-                        var $progressLoad = config.playerContainer.find('.h5player-progress-load'),
-                            $progressPlay = config.playerContainer.find('.h5player-progress-play'),
-                            $progressBtnScrubber = config.playerContainer.find('.h5player-progress-btn-scrubber'),
-                            currentTime = config.player_source.currentTime,
+                        if (currentTime) {
+                            // 更新播放视频进度
+                            $progressPlay.css({
+                                width: (currentTime / duration) * 100 + '%'
+                            });
+                            // 进度条小圆点
+                            $progressBtnScrubber.css({
+                                left: (currentTime / duration) * 100 + '%'
+                            });
+                        }
+
+                        if (loadedTime) {
+                            // 更新加载视频进度
+                            $progressLoad.css({
+                                width: (loadedTime / duration) * 100 + '%'
+                            });
+                        }
+                    },
+                    // 视频数据加载进度更新 - buffered
+                    onprogress: function (e) {
+                        var currentTime = config.player_source.currentTime,
                             buffered = config.player_source.buffered,
                             nearLoadedTime = 0;
-
                         for (var i = 0; i < buffered.length; i++) {
-                            if (buffered.end(i) > currentTime) {
+                            if (buffered.end(i) >= currentTime && buffered.start(i) <= currentTime) {
                                 nearLoadedTime = buffered.end(i);
+                            } else {
+                                nearLoadedTime = currentTime + 1;
                             }
                         }
-                        // 更新加载视频进度
-                        $progressLoad.css({
-                            width: (nearLoadedTime / duration) * 100 + '%'
-                        });
-                        // 更新播放视频进度
-                        $progressPlay.css({
-                            width: (currentTime / duration) * 100 + '%'
-                        });
-                        // 进度条小圆点
-                        $progressBtnScrubber.css({
-                            left: (currentTime / duration) * 100 + '%'
-                        });
+                        var param = {
+                            loadedTime: nearLoadedTime
+                        };
+                        config.h5player.progressChange(param);
+                    },
+                    // 视频进度更新 - currentTime
+                    ontimeupdate: function (e) {
+                        var currentTime = config.player_source.currentTime,
+                            param = {
+                                currentTime: currentTime
+                            };
+                        config.h5player.progressChange(param);
                     },
                     // 视频播放到结尾
                     onended: function () {
@@ -159,6 +190,7 @@
                     },
                     // 更新视频进度
                     onloadeddata: function () {
+                        config.player_source.onprogress = config.h5player.onprogress;
                         config.player_source.ontimeupdate = config.h5player.ontimeupdate;
                         config.player_source.onended = config.h5player.onended;
                     }
@@ -366,7 +398,8 @@
 
     function initHtml5CtrlEvents(config) {
         // webkit内核浏览器volue slidebar样式初始化
-        var webkitVolumePseudoClassInited = false;
+        var webkitVolumePseudoClassInited = false,
+            processBarCanDrag = false;
         config.playerContainer.on('click', '.h5player-ctrl-bar .btn-play', function () {
             config.h5player.play();
         });
@@ -382,21 +415,24 @@
         config.playerContainer.on('mousedown', '.h5player-live-ctrl .h5player-progress-bar-container', function (e) {
             var $this = $(this),
                 thisWidth = $this.width(),
-                isOneClick = true;
-
-            config.h5player.ontimeupdate(e, e.offsetX / thisWidth);
-
-            $this.on('mousemove', function (e) {
-                if (isOneClick) {
-                    config.h5player.ontimeupdate(e, e.offsetX / thisWidth);
-                }
-            });
-
-            $this.one('mouseup', function (e) {
-                isOneClick = false;
-                $this.off('mousemove');
-            });
+                param = {
+                    currentTimePercent: e.offsetX / thisWidth,
+                    isSeek: true
+                };
+            config.h5player.progressChange(param);
+            processBarCanDrag = true;
         });
+        $(document).on('mousemove', function (e) {
+            if (processBarCanDrag) {
+                console.log(e);
+                console.log(e.offsetX);
+                // config.h5player.progressChange(e.offsetX / thisWidth);
+            }
+        });
+        $(document).on('mouseup', function (e) {
+            processBarCanDrag = false;
+        });
+
         /* input range - input事件在IE10尚不支持，可以使用change替代 */
         config.playerContainer.on('input change', '.h5player-ctrl-bar .h5player-ctrl-bar-volume-slidebar', function () {
 
