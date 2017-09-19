@@ -85,19 +85,23 @@
     top: 3px;
     margin-left: -5px;
     cursor: pointer;
+    user-select: all;
+    -ms-touch-action: none;
+    touch-action: none;
 }
 .h5player-progress-bar-container:hover .h5player-progress-btn-scrubber{
     display: block;
     top: 0px;
 }
 .h5player-progress-btn-scrubber .h5player-progress-btn-scrubber-indicator{
-    position: relative;
     width: 10px;
     height: 10px;
     border-radius: 100%;
     background-color: #fff;
-    /* box-shadow: 0 0 15px #ff6e0b; */
     box-shadow: 0 0 15px #1cd388;
+    user-select: all;
+    -ms-touch-action: none;
+    touch-action: none;
 }
 
 .liveContent .h5player-live-ctrl .h5player-live-bar{
@@ -212,6 +216,20 @@
     background-image: none; 
     margin-left: 0;
 }
+/* h5播放器控制条时间线 */
+.h5player-ctrl-bar .h5player-ctrl-timeline-container{
+    float: left;
+    color: #fff;
+    line-height: 30px;
+    margin: 5px 10px;
+    text-align: center;
+    font-size: 12px;
+    -ms-user-select: none;
+    user-select: none;
+}
+.h5player-ctrl-timeline-container > span{
+    margin: 0 5px;
+}
 
 .h5player-ctrl-bar-volume-slide input[type=range] {
     position: relative;
@@ -321,7 +339,7 @@
 }
 
 /* 控制全屏下直播视频控制条隐藏 */
-video.videoLive::-webkit-media-controls-enclosure {
+.h5player-status-fullScreen video.videoLive::-webkit-media-controls-enclosure {
     /*禁用播放器控制栏的样式*/
     display: none !important;
 }
