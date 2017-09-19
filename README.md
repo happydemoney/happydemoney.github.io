@@ -8,6 +8,27 @@
    } 
    (default: false)
 ```
+* autoplay(true/false)
+```javascript
+   {
+       autoplay: true
+   } 
+   (default: true)
+```
+* controls(true/false)
+```javascript
+   {
+       controls: true
+   } 
+   (default: true)
+```
+* isDefaultControls (true/false)
+```javascript
+   {
+       isDefaultControls: false
+   } 
+   (default: false)
+```
 * playerType(Html5/Flash)
 ```javascript
     {
