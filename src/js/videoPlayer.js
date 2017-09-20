@@ -66,6 +66,8 @@
                 h5player: {
                     // 全屏状态
                     fullscreenStatus: false,
+                    // fullscreenHideTimeout - 全屏隐藏控制条时间间隔设置
+                    fullscreenHideTimeout: 2000,
                     // h5player - volume - object
                     playerVolumer: undefined,
                     // 用户是否正在寻址，操作视频进度条
@@ -176,10 +178,8 @@
 
                         if (currentTimePercent) {
                             currentTime = Math.round(currentTimePercent * duration);
-                            // console.log(config.player_source.seeking);
                             if (isSeek) {
                                 config.player_source.currentTime = currentTime;
-                                // console.log(config.player_source.seeking);
                             }
                         }
 
@@ -443,7 +443,27 @@
 
     function initHtml5CtrlEvents(config) {
         // webkit内核浏览器volue slidebar样式初始化
-        var webkitVolumePseudoClassInited = false;
+        var webkitVolumePseudoClassInited = false,
+            timeoutId = undefined;
+        config.playerContainer.on('mouseenter','.liveContent',function(){
+            var $this = $(this);
+            $this.hasClass('h5player-status-controls-in') ? '' : $this.addClass('h5player-status-controls-in');
+        });
+        /* 全屏状态用户鼠标停留超过2s后关闭控制显示条，移动鼠标立即显示控制条 */
+        config.playerContainer.on('mousemove','.h5player-status-fullScreen .liveContent',function(){
+            var $this = $(this);
+            if(timeoutId){
+                clearTimeout(timeoutId);
+                $this.hasClass('h5player-status-controls-in') ? '' : $this.addClass('h5player-status-controls-in');
+            }
+            timeoutId = setTimeout(function(){
+                $this.hasClass('h5player-status-controls-in') ?  $this.removeClass('h5player-status-controls-in') : '';
+            },config.h5player.fullscreenHideTimeout);
+        });
+        config.playerContainer.on('mouseleave','.liveContent',function(){
+            var $this = $(this);
+            $this.hasClass('h5player-status-controls-in') ?  $this.removeClass('h5player-status-controls-in') : '';
+        });
         config.playerContainer.on('click', '.h5player-status-playing .h5player-ctrl-bar .btn-play', function () {
             config.h5player.pause();
         });
