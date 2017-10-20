@@ -57,6 +57,20 @@
         videoUrl: 'http://***.mp4(.ogg/.webm/.flv/.m3u8)'
     }
 ```
+* showCloseBtn(string)
+```javascript
+// if -- (showCloseBtn: false)  
+    {
+        showCloseBtn:false
+    }
+//else if -- (showCloseBtn: true)    
+    {
+        showCloseBtn: true,
+        callback:{
+            videoClosed: function(){ console.log('当前视频已关闭！'); }
+        }
+    }
+```
 ##  How to use
 ```javascript
 <link rel="stylesheet" type="text/css" href="dist/css/videoPlayer.css" />

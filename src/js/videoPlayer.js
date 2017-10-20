@@ -26,7 +26,7 @@
 
             var defaultConfig = {
                 // 调试模式
-                debug: true,
+                debug: false,
                 // log print
                 log: function (msg) {
                     if (config.debug) {
@@ -50,6 +50,8 @@
                 isDefaultControls: false,
                 // 播放器类型
                 playerType: 'Html5',    // Html5 - Flash
+                // 是否显示关闭视频按钮 - 默认位置视频顶部
+                showCloseBtn: false,
                 // 直播视频流 rtmp视频流 - http-flv视频流 - hls分片视频索引文件(m3u8)
                 liveStreamUrl: {
                     RTMP: '',
@@ -62,6 +64,10 @@
                 player: undefined,
                 // 播放器源video对象
                 player_source: undefined,
+                // 回调函数 - 视频被关闭
+                callback: {
+                    videoClosed: function () { }
+                },
                 // H5播放器事件
                 h5player: {
                     // 全屏状态
@@ -388,6 +394,8 @@
             h5playerStatusClass = config.autoplay ? 'h5player-status-playing' : 'h5player-status-paused',
             timelineTag = '<div class="h5player-ctrl-timeline-container"><span class="current-time">00:00:01</span>/<span class="duration-time">01:30:30</span></div>', // 点播视频显示 - 当前时间 / 视频长度
 
+            closeBtnString = config.showCloseBtn ? '<div class="closeWrap"><div class="closeBtn"></div></div>' : '',
+
             html5ControlString_live = '<div class="h5player-live-ctrl">' +
                 '<div class="h5player-live-bar">' +
                 '<div class="h5player-ctrl-bar clearfix">' +
@@ -430,7 +438,7 @@
             videoString = '<div class="videoContainer"><div class="liveContent ' + h5playerStatusClass + '">' +
                 '<video class="' + videoClassName + '" id="' + playerId + '" ' + controlsTag + '>' +
                 'Your browser is too old which does not support HTML5 video' +
-                '</video>' + html5ControlString +
+                '</video>' + closeBtnString + html5ControlString +
                 '</div></div>';
 
         playerContainer.append(videoString);
@@ -445,24 +453,33 @@
         // webkit内核浏览器volue slidebar样式初始化
         var webkitVolumePseudoClassInited = false,
             timeoutId = undefined;
-        config.playerContainer.on('mouseenter','.liveContent',function(){
+        config.playerContainer.on('mouseenter', '.liveContent', function () {
             var $this = $(this);
             $this.hasClass('h5player-status-controls-in') ? '' : $this.addClass('h5player-status-controls-in');
         });
+        /* CloseBtn点击事件 */
+        config.playerContainer.on('click', '.closeBtn', function () {
+            if (confirm('确定关闭视频?')) {
+                config.player.destroy();
+                config.playerContainer.find('.videoContainer ').remove();
+                // 报告视频关闭状态
+                config.callback.videoClosed();
+            }
+        });
         /* 全屏状态用户鼠标停留超过2s后关闭控制显示条，移动鼠标立即显示控制条 */
-        config.playerContainer.on('mousemove','.h5player-status-fullScreen .liveContent',function(){
+        config.playerContainer.on('mousemove', '.h5player-status-fullScreen .liveContent', function () {
             var $this = $(this);
-            if(timeoutId){
+            if (timeoutId) {
                 clearTimeout(timeoutId);
                 $this.hasClass('h5player-status-controls-in') ? '' : $this.addClass('h5player-status-controls-in');
             }
-            timeoutId = setTimeout(function(){
-                $this.hasClass('h5player-status-controls-in') ?  $this.removeClass('h5player-status-controls-in') : '';
-            },config.h5player.fullscreenHideTimeout);
+            timeoutId = setTimeout(function () {
+                $this.hasClass('h5player-status-controls-in') ? $this.removeClass('h5player-status-controls-in') : '';
+            }, config.h5player.fullscreenHideTimeout);
         });
-        config.playerContainer.on('mouseleave','.liveContent',function(){
+        config.playerContainer.on('mouseleave', '.liveContent', function () {
             var $this = $(this);
-            $this.hasClass('h5player-status-controls-in') ?  $this.removeClass('h5player-status-controls-in') : '';
+            $this.hasClass('h5player-status-controls-in') ? $this.removeClass('h5player-status-controls-in') : '';
         });
         config.playerContainer.on('click', '.h5player-status-playing .h5player-ctrl-bar .btn-play', function () {
             config.h5player.pause();

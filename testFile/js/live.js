@@ -18,7 +18,8 @@ function antSwitch() {
                 case 'FlvJs':
                     var player = $parentRenderItem.videoPlayer({
                         liveStreamUrl: liveStreamUrl,
-                        isLive: true
+                        isLive: true,
+                        showCloseBtn: true
                     });
                     $parentRenderItem.data('player', player);
                     break;
@@ -43,7 +44,8 @@ function antSwitch() {
             switch (dataType) {
                 case 'FlvJs':
                     var player = $parentRenderItem.videoPlayer({
-                        videoUrl: oVideoUrl.flv
+                        videoUrl: oVideoUrl.flv,
+                        showCloseBtn: true
                     });
                     $parentRenderItem.data('player', player);
                     break;
