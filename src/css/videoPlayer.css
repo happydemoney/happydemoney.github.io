@@ -42,16 +42,6 @@
     transition: all 300ms ease-in;
     box-sizing: border-box;
 }
-.liveContent .closeWrap .closeBtn{
-    margin: 0 auto;
-    width: 32px;
-    height: 32px;
-    background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAB+UlEQVRYR+1X0VXCQBCcqUCpQKlArECpQKlArUCoQKxArUCoQDsQKlAqECsQK1jfxDvcF8JLcpC/7B8X7nZudnd2j0g0M+sBeAvb+yQ/Uo5iyibtMbMxgLuw/56kfte2FkDLQMtAy0DGgJldA3gGIDWTqq3KFCVFiMzsEMA7gGMANyQnEYAcHjhZnTUE4NzJ94pkh2Z2CeDFOew0zMC38zUQgAmAq7A4JalwlFpKCEK4XwFcrP2Zmeg+CwtZXEq979CMcsDnYmAJ4KhO/Hfphmbm82ApAOZurAooTcA9AsAuAHzyDkgqtqWWYyADkJQDgQVNRagzDZnZEMBDQJrlgAfwRFJ/aMzM7BHArQfgES1Jdhvz/lc9PulHYkCy+JmSiHWB5uMPoBulWD3gJBw4I9mve3iV/+fCvSDZiwB8beqsEUnFam+WSz6dm5X8eh7IoVNzSp7186jdG0LdUDYnqUvDA1AuKBSxK+4FRIHzHwA9kkrGfwCurtWvvVXuDwU3j3OG/3TqdWNjJHPDid8krdDrp6pMi169mjKanW1cpnAmDLRJWmOTimeINq0LiEK0CB9UQYqvHEqiFU5vX1ovUsytQ2kYn1QJcVZIrYgpgOG2Iad0Kg5CpYdnXSByPI7Jtg19KYC4MTDiKRblUbwUCoVkHaIqY53O/gUf5jGvGOjHxgAAAABJRU5ErkJggg==");
-    background-position: center;
-    background-size: 32px 32px;
-    background-repeat: no-repeat;
-    cursor: pointer;
-}
 .h5player-status-controls-in .closeWrap{
     top: 0;
 }
@@ -200,7 +190,10 @@
 .h5player-ctrl-bar .h5player-ctrl-bar-btn.btn-barrage{
     float: right;
     width: 53px;
-    background-position: 0 -90px
+    background-position: -60px -90px;
+}
+.h5player-ctrl-bar .h5player-ctrl-bar-btn.btn-barrage.active{
+    background-position: 0 -90px;
 }
 /* 视频清晰度 - 超清 - 高清 - 标清 */
 .h5player-ctrl-bar .h5player-ctrl-bar-btn.btn-kbps,
@@ -341,6 +334,85 @@
 .h5player-ctrl-bar-volume-slide input[type=range]::-ms-fill-upper{
     background-color: #b9b9b9;
 }
+/* 弹幕主体显示部分 */
+.h5player-barrage-wrap{
+    position: absolute;
+    width: 100%;
+    height: 100%;
+}
+.h5player-barrage-item {
+    position: absolute;
+    user-select: none;
+    pointer-events: none;
+    display: inline-block;
+    white-space: pre;
+    top: auto;
+    left: 0;
+    visibility: hidden;
+
+    line-height: 1.125;
+}
+.animation_barrage {
+    animation: barrage 5s linear 0s 1;
+    /* Firefox */
+    -moz-animation: barrage 5s linear 0s 1;
+    /* Safari 和 Chrome */
+    -webkit-animation: barrage 5s linear 0s 1;
+    /* Opera */
+    -o-animation: barrage 5s linear 0s 1;
+}
+
+.h5player-status-paused .animation_barrage {
+    animation-play-state: paused;
+}
+
+@keyframes barrage {
+    0% {
+        visibility: visible;
+        transform: translateX(1024px);
+    }
+    100% {
+        visibility: visible;
+        transform: translateX(-100%);
+    }
+}
+
+/* 弹幕输入框部分 */
+.barrage-input-container{
+    position: relative;
+    padding: 8px 8px 8px 15px;
+    background-color: #2d2d2d;
+    color: #999;
+    box-sizing: border-box;
+
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    display: none;
+}
+.barrage-input-container.active{
+    display: block;
+}
+.barrage-input-container input {
+    border: 1px solid #000;
+    vertical-align: middle;
+    box-sizing: border-box;
+    height:33px;
+    font-size: 14px;
+    border-radius: 20px;
+    outline: none;
+}
+.barrage-input-container input[type="text"]{
+    padding-left: 15px;
+    width: 375px;
+}
+.barrage-input-container input[type="button"]{
+    cursor: pointer;
+    padding-left: 20px;
+    padding-right: 20px;
+}
+
 /* 全屏样式设置 */
 :-moz-full-screen .liveContent{
     position: static;

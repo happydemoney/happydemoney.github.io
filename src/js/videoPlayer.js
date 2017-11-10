@@ -1,6 +1,7 @@
 /**
  *  @description:   videoPlayer.js
  *  @version:   v1.0.1
+ *  @author: happydemoney(6744255@qq.com)
  */
 (function (factory) {
     if (typeof define === 'function' && define.amd) {
@@ -48,10 +49,15 @@
                 controls: true,
                 // 是否使用默认HTML5播放器控件
                 isDefaultControls: false,
+                // 是否显示弹幕按钮
+                showBarrageBtn: true,
+                // 弹幕服务关联
+                barrageServer: {
+                    Live: '',      // 直播聊天室，广播用户弹幕
+                    onDemand: ''    // 点播弹幕，存储视频不同时间节点弹幕数据，再次打开视频在不同时间节点展示弹幕数据
+                },
                 // 播放器类型
                 playerType: 'Html5',    // Html5 - Flash
-                // 是否显示关闭视频按钮 - 默认位置视频顶部
-                showCloseBtn: false,
                 // 直播视频流 rtmp视频流 - http-flv视频流 - hls分片视频索引文件(m3u8)
                 liveStreamUrl: {
                     RTMP: '',
@@ -64,10 +70,6 @@
                 player: undefined,
                 // 播放器源video对象
                 player_source: undefined,
-                // 回调函数 - 视频被关闭
-                callback: {
-                    videoClosed: function () { }
-                },
                 // H5播放器事件
                 h5player: {
                     // 全屏状态
@@ -259,6 +261,9 @@
                 destroy: function () {
                     config.player.destroy();
                     config.playerContainer.find('.videoContainer ').remove();
+                    // 事件销毁
+                    config.playerContainer.off('.vp_custom_event');
+                    $(document).off('.vp_custom_event');
                 }
             };
 
@@ -394,7 +399,14 @@
             h5playerStatusClass = config.autoplay ? 'h5player-status-playing' : 'h5player-status-paused',
             timelineTag = '<div class="h5player-ctrl-timeline-container"><span class="current-time">00:00:01</span>/<span class="duration-time">01:30:30</span></div>', // 点播视频显示 - 当前时间 / 视频长度
 
-            closeBtnString = config.showCloseBtn ? '<div class="closeWrap"><div class="closeBtn"></div></div>' : '',
+            // 是否开启弹幕功能
+            barrageBtnString = config.showBarrageBtn ? '<span class="h5player-ctrl-bar-btn btn-barrage" data-info="弹幕"></span>' : '',
+            // 弹幕主体部分
+            barrageContentString = config.showBarrageBtn ? '<div class="h5player-barrage-wrap"></div>' : '',
+            // 弹幕输入框部分
+            barrageInputString = config.showBarrageBtn ? '<div class="barrage-input-container">我要吐槽：\
+                                <input class="barrage-input" type= "text" data-info="弹幕输入" placeholder= "发弹幕是不可能不发弹幕的，这辈子不可能不发弹幕的。" />\
+                                <input class="barrage-send" type="button" data-info="发送弹幕" value="发送" /></div > ' : '',
 
             html5ControlString_live = '<div class="h5player-live-ctrl">' +
                 '<div class="h5player-live-bar">' +
@@ -409,6 +421,7 @@
                 '</div></div>' +
 
                 '<span class="h5player-ctrl-bar-btn btn-fullScreen" data-info="全屏"></span>' +
+                barrageBtnString +
                 // '<span class="h5player-ctrl-bar-btn btn-lines" data-info="线路">线路</span>' +
                 // '<span class="h5player-ctrl-bar-btn btn-kbps" data-info="超清">超清</span>' +
                 // '<span class="h5player-ctrl-bar-btn btn-barrage" data-info="弹幕"></span>' +
@@ -431,6 +444,7 @@
                 '</div></div>' + timelineTag +
 
                 '<span class="h5player-ctrl-bar-btn btn-fullScreen" data-info="全屏"></span>' +
+                barrageBtnString +
                 '</div></div></div>',
 
             html5ControlString = config.playerType !== 'Flash' && config.controls && !config.isDefaultControls ? (config.isLive ? html5ControlString_live : html5ControlString_onDemond) : '',
@@ -438,8 +452,9 @@
             videoString = '<div class="videoContainer"><div class="liveContent ' + h5playerStatusClass + '">' +
                 '<video class="' + videoClassName + '" id="' + playerId + '" ' + controlsTag + '>' +
                 'Your browser is too old which does not support HTML5 video' +
-                '</video>' + closeBtnString + html5ControlString +
-                '</div></div>';
+                '</video>' + barrageContentString + html5ControlString +
+                '</div>' + barrageInputString +
+                '</div>';
 
         playerContainer.append(videoString);
         initHtml5CtrlEvents(config);
@@ -453,21 +468,12 @@
         // webkit内核浏览器volue slidebar样式初始化
         var webkitVolumePseudoClassInited = false,
             timeoutId = undefined;
-        config.playerContainer.on('mouseenter', '.liveContent', function () {
+        config.playerContainer.on('mouseenter.vp_custom_event', '.liveContent', function () {
             var $this = $(this);
             $this.hasClass('h5player-status-controls-in') ? '' : $this.addClass('h5player-status-controls-in');
         });
-        /* CloseBtn点击事件 */
-        config.playerContainer.on('click', '.closeBtn', function () {
-            if (confirm('确定关闭视频?')) {
-                config.player.destroy();
-                config.playerContainer.find('.videoContainer ').remove();
-                // 报告视频关闭状态
-                config.callback.videoClosed();
-            }
-        });
         /* 全屏状态用户鼠标停留超过2s后关闭控制显示条，移动鼠标立即显示控制条 */
-        config.playerContainer.on('mousemove', '.h5player-status-fullScreen .liveContent', function () {
+        config.playerContainer.on('mousemove.vp_custom_event', '.h5player-status-fullScreen .liveContent', function () {
             var $this = $(this);
             if (timeoutId) {
                 clearTimeout(timeoutId);
@@ -477,31 +483,37 @@
                 $this.hasClass('h5player-status-controls-in') ? $this.removeClass('h5player-status-controls-in') : '';
             }, config.h5player.fullscreenHideTimeout);
         });
-        config.playerContainer.on('mouseleave', '.liveContent', function () {
+        config.playerContainer.on('mouseleave.vp_custom_event', '.liveContent', function () {
             var $this = $(this);
             $this.hasClass('h5player-status-controls-in') ? $this.removeClass('h5player-status-controls-in') : '';
         });
-        config.playerContainer.on('click', '.h5player-status-playing .h5player-ctrl-bar .btn-play', function () {
+        config.playerContainer.on('click.vp_custom_event', '.h5player-status-playing .h5player-ctrl-bar .btn-play', function () {
             config.h5player.pause();
         });
-        config.playerContainer.on('click', '.h5player-status-paused .h5player-ctrl-bar .btn-play', function () {
+        config.playerContainer.on('click.vp_custom_event', '.h5player-status-paused .h5player-ctrl-bar .btn-play', function () {
             config.h5player.play();
         });
-        config.playerContainer.on('click', '.h5player-ctrl-bar .btn-refresh', function () {
+        config.playerContainer.on('click.vp_custom_event', '.h5player-ctrl-bar .btn-refresh', function () {
             config.h5player.refresh();
         });
-        config.playerContainer.on('click', '.h5player-ctrl-bar .btn-fullScreen', function () {
+        config.playerContainer.on('click.vp_custom_event', '.h5player-ctrl-bar .btn-fullScreen', function () {
             config.h5player.fullscreen();
         });
-        config.playerContainer.on('click', '.h5player-ctrl-bar .btn-volume', function () {
+        config.playerContainer.on('click.vp_custom_event', '.h5player-ctrl-bar .btn-volume', function () {
             config.h5player.muted();
         });
+
+        /* 弹幕相关事件 */
+        config.playerContainer.on('click.vp_custom_event', '.h5player-ctrl-bar .btn-barrage', barrageFuncSwitch);
+        config.playerContainer.on('click.vp_custom_event', '.barrage-input-container .barrage-send', barrageSend);
+        config.playerContainer.on('keydown.vp_custom_event', '.barrage-input-container .barrage-input', barrageInput);
+
         /* 屏蔽视频进度条圆点的拖放事件 */
-        config.playerContainer.on('dragstart', '.h5player-live-ctrl .h5player-progress-btn-scrubber', function (e) {
+        config.playerContainer.on('dragstart.vp_custom_event', '.h5player-live-ctrl .h5player-progress-btn-scrubber', function (e) {
             e.preventDefault();
         });
         /* 视频进度条容器 鼠标按下事件 */
-        config.playerContainer.on('mousedown', '.h5player-live-ctrl .h5player-progress-bar-container', function (e) {
+        config.playerContainer.on('mousedown.vp_custom_event', '.h5player-live-ctrl .h5player-progress-bar-container', function (e) {
             e.stopPropagation();
             e.stopImmediatePropagation();
             var $this = $(this),
@@ -518,7 +530,7 @@
             config.h5player.pause();
         });
         /* document mousemove */
-        $(document).on('mousemove', function (e) {
+        $(document).on('mousemove.vp_custom_event', function (e) {
             if (config.h5player.seeking) {
                 e.stopPropagation();
                 e.stopImmediatePropagation();
@@ -537,14 +549,14 @@
             }
         });
         /* document mouseup */
-        $(document).on('mouseup', function (e) {
+        $(document).on('mouseup.vp_custom_event', function (e) {
             if (config.h5player.seeking) {
                 config.h5player.seeking = false;
                 config.h5player.play();
             }
         });
         /* input range - input事件在IE10尚不支持，可以使用change替代 */
-        config.playerContainer.on('input change', '.h5player-ctrl-bar .h5player-ctrl-bar-volume-slidebar', function () {
+        config.playerContainer.on('input.vp_custom_event change.vp_custom_event', '.h5player-ctrl-bar .h5player-ctrl-bar-volume-slidebar', function () {
             var $this = $(this),
                 thisValue = $this.val();
             config.h5player.volumeChange(thisValue / 100);
@@ -553,7 +565,7 @@
                 $this.attr('data-process', thisValue);
             }
         });
-        $(document).on('webkitfullscreenchange mozfullscreenchange MSFullscreenChange fullscreenchange', function () {
+        $(document).on('webkitfullscreenchange.vp_custom_event mozfullscreenchange.vp_custom_event MSFullscreenChange.vp_custom_event fullscreenchange.vp_custom_event', function () {
             var $videoContainer = config.playerContainer.find('.videoContainer ');
             if (config.h5player.fullscreenStatus && $videoContainer.hasClass('h5player-status-fullScreen') && !fullscreenElement()) {
                 config.h5player.fullscreenStatus = false;
@@ -574,6 +586,75 @@
             $(newStyle).appendTo('head');
             webkitVolumePseudoClassInited = true;
         }
+    }
+
+    /* 弹幕开关处理程序 */
+    function barrageFuncSwitch() {
+        var $this = $(this),
+            $parentLiveContent = $this.parents('.liveContent'),
+            $h5playerBarrageWrap = $parentLiveContent.find('.h5player-barrage-wrap'),
+            $barrageInputContainer = $parentLiveContent.siblings('.barrage-input-container');
+
+        if (!$this.hasClass('active')) {
+            $barrageInputContainer.addClass('active');
+            $this.addClass('active');
+        } else {
+            $barrageInputContainer.removeClass('active');
+            $this.removeClass('active');
+            $h5playerBarrageWrap.empty();
+        }
+    }
+    /** 发送弹幕*/
+    function barrageSend() {
+        var $this = $(this),
+            $barrageWrap = $this.parents('.videoContainer').find('.h5player-barrage-wrap'),
+            $barrageInput = $this.siblings('.barrage-input'),
+            barrageInfo = $barrageInput.val();
+
+        if (!barrageInfo) {
+            alert('请输入弹幕信息~');
+        } else {
+
+            var barrageItem = {
+                version: '1.0.0',
+                message: {
+                    text: barrageInfo,
+                    style: {
+                        color: '#ffffff',  // 字体颜色
+                        fontSize: '25px',   // 字体大小
+                        time: 0    // 1 (ms) = 1/1000 (s)
+                    }
+                }
+            };
+
+            $barrageWrap.append(createBarrageDom(barrageItem));
+            $barrageInput.val('');
+        }
+    }
+    /* 弹幕输入处理 */
+    function barrageInput(event) {
+        // 回车
+        if (event.keyCode == 13) {
+            var $this = $(this),
+                $barrageSend = $this.siblings('.barrage-send');
+            $barrageSend.trigger('click');
+        }
+    }
+    /* 创建弹幕dom节点 */
+    function createBarrageDom(barrageData) {
+        var barrageItem = '<div class="h5player-barrage-item animation_barrage" style="' +
+            'color:' + barrageData.message.style.color + ';' +
+            'font-size:' + barrageData.message.style.fontSize + ';' +
+            'top:' + randomTop() + 'px;' +
+            '">' + barrageData.message.text + '</div>';
+        return barrageItem;
+    }
+    /* 随机生成弹幕位置 - 距离视频顶部 */
+    function randomTop() {
+        var randomNum = Math.random(),
+            randomTop = Math.floor(randomNum * (576 - 26));
+
+        return randomTop;
     }
 
     // 基于flv.js的html5播放器    

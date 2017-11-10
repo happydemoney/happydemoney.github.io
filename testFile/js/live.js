@@ -18,15 +18,20 @@ function antSwitch() {
                 case 'FlvJs':
                     var player = $parentRenderItem.videoPlayer({
                         liveStreamUrl: liveStreamUrl,
-                        isLive: true,
-                        showCloseBtn: true
+                        isLive: true
                     });
                     $parentRenderItem.data('player', player);
                     break;
                 case 'HlsJs':
                     var player = $parentRenderItem.videoPlayer({
                         isLive: true,
-                        videoUrl: liveStreamUrl.HLS
+                        videoUrl: liveStreamUrl.HLS,
+                        showCloseBtn: true,
+                        callback: {
+                            videoClosed: function () {
+                                $this.toggleClass('ant-switch-checked');
+                            }
+                        }
                     });
                     $parentRenderItem.data('player', player);
                     break;
