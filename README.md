@@ -57,6 +57,26 @@
         videoUrl: 'http://***.mp4(.ogg/.webm/.flv/.m3u8)'
     }
 ```
+
+* barrage(object)
+```javascript
+// 弹幕相关配置
+barrage: {
+    // 是否显示弹幕按钮
+    isShow: false,
+    // 视频信息 - 名称和ID
+    videoInfo: {
+        videoName: '',
+        videoId: ''
+    },
+    // 弹幕服务器地址
+    serverUrl: '',
+    // 弹幕客户端对象 - 处理弹幕发送、接收和显示
+    clientObject: null
+}
+```
+
+
 ##  How to use
 ```javascript
 <link rel="stylesheet" type="text/css" href="dist/css/videoPlayer.css" />

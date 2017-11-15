@@ -25,13 +25,7 @@ function antSwitch() {
                 case 'HlsJs':
                     var player = $parentRenderItem.videoPlayer({
                         isLive: true,
-                        videoUrl: liveStreamUrl.HLS,
-                        showCloseBtn: true,
-                        callback: {
-                            videoClosed: function () {
-                                $this.toggleClass('ant-switch-checked');
-                            }
-                        }
+                        videoUrl: liveStreamUrl.HLS
                     });
                     $parentRenderItem.data('player', player);
                     break;
@@ -50,8 +44,16 @@ function antSwitch() {
                 case 'FlvJs':
                     var player = $parentRenderItem.videoPlayer({
                         videoUrl: oVideoUrl.flv,
-                        showCloseBtn: true
+                        barrage: {
+                            isShow: true,
+                            videoInfo: {
+                                videoName: 'videoTest',
+                                videoId: 1000
+                            },
+                            serverUrl: 'http://192.168.1.206:3000'
+                        }
                     });
+
                     $parentRenderItem.data('player', player);
                     break;
                 case 'HlsJs':
