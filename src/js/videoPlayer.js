@@ -22,6 +22,10 @@
     var $document = $(document);
     var VERSION = '1.0.2';
     var pluginName = 'videoPlayer';
+    var idCount = { // 视频ID计数
+        Html5: 0,
+        Flash: 0
+    };
 
     var videoPlayer = function (options, oParent) {
         // common jQuery objects
@@ -46,10 +50,11 @@
                 hls: 'HLS',
                 html5: 'HTML5'
             },
-            // 视频ID计数
-            idCount = {
-                Html5: 0,
-                Flash: 0
+            // 弹幕控制对象 - 包含弹幕开启状态、定时器ID、请求延时时间设定
+            barrageControl = {
+                isOpen: false,
+                intervalTime: 5000, // 5秒
+                intervalId: undefined
             };
 
         options = $.extend({
@@ -93,11 +98,6 @@
             },
             // 弹幕显示区域父节点DOM对象
             barrageContainer: undefined,
-            // 定时器对象 - 包含定时器ID、请求延时时间
-            barrageTimer: {
-                intervalTime: 5000, // 5秒
-                intervalId: undefined
-            },
             // 自定义h5播放控制器相关
             h5player_setting: {
                 // fullscreenHideTimeout - 全屏隐藏控制条时间间隔设置
@@ -121,6 +121,8 @@
                 if (options.player_source.paused) {
                     options.player_source.play();
                     $videoParent.addClass('h5player-status-playing').removeClass('h5player-status-paused');
+
+                    updateBarrageData('play');
                 }
             },
             // 播放器暂停
@@ -129,6 +131,8 @@
                 if (!options.player_source.paused) {
                     options.player_source.pause();
                     $videoParent.addClass('h5player-status-paused').removeClass('h5player-status-playing');
+
+                    updateBarrageData('pause');
                 }
             },
             // 播放器刷新
@@ -434,14 +438,14 @@
                 options.player.on(Hls.Events.ERROR, function (event, data) {
                     switch (data.type) {
                         case Hls.ErrorTypes.MEDIA_ERROR:
-                            console.log("MEDIA error ...");
+                            showError('error', 'MEDIA error ...');
                             hls.destroy();
                             break;
                         case Hls.ErrorTypes.NETWORK_ERROR:
-                            console.log("network error ...");
+                            showError('error', 'network error ...');
                             break;
                         default:
-                            _hls.destroy();
+                            hls.destroy();
                             break;
                     }
                 });
@@ -457,14 +461,14 @@
                 hls.on(Hls.Events.ERROR, function (event, data) {
                     switch (data.type) {
                         case Hls.ErrorTypes.MEDIA_ERROR:
-                            console.log("MEDIA error ...");
+                            showError('error', 'MEDIA error ...');
                             hls.destroy();
                             break;
                         case Hls.ErrorTypes.NETWORK_ERROR:
-                            console.log("network error ...");
+                            showError('error', 'network error ...');
                             break;
                         default:
-                            _hls.destroy();
+                            hls.destroy();
                             break;
                     }
                 });
@@ -528,11 +532,11 @@
 
         // 初始化播放器结构 并返回生成的播放器DOM ID    
         function initVideoStruct() {
-
+            idCount.Html5++;
             var playerContainer = options.playerContainer,
                 videoIdFormal = options.isLive ? 'live' : 'onDemand',
-                playerId = videoIdFormal + options.playerType + '-' + idCount.Html5++,
-                volumeSlidebarId = 'volumeSlidebar' + '-' + idCount.Html5++,
+                playerId = videoIdFormal + options.playerType + '-' + idCount.Html5,
+                volumeSlidebarId = 'volumeSlidebar' + '-' + idCount.Html5,
                 videoClassName = options.isLive ? 'videoLive' : 'videoOnDemand',
                 controlsTag = (options.controls && options.isDefaultControls) ? 'controls' : '',
                 // autoplayTag = options.autoplay ? "autoplay" : "",
@@ -736,8 +740,30 @@
          * methodName (open/close)
          */
         function updateBarrageData(methodName) {
+
+            switch (methodName) {
+                // 打开弹幕
+                case 'open':
+                    _open();
+                    break;
+                // 关闭弹幕
+                case 'close':
+                    _close();
+                    break;
+                // 暂停后再播放时打开弹幕
+                case 'play':
+                    _play();
+                    break;
+                // 暂停弹幕
+                case 'pause':
+                    _pause();
+                    break;
+                default:
+                    break;
+            }
+
             // 打开弹幕
-            if (methodName == 'open') {
+            function _open() {
                 if (!options.barrage.clientObject) {
                     options.barrage.clientObject = new Barrage(options.isLive);
                     options.barrage.clientObject.connectServer(options.barrage.serverUrl, options.barrage.videoInfo.videoName, options.barrage.videoInfo.videoId);
@@ -745,16 +771,35 @@
                 options.barrage.clientObject.getMessageByTime(Math.round(options.player_source.currentTime));
                 updateBarrageDisplay();
 
-                options.barrageTimer.intervalId = setInterval(function () {
+                barrageControl.intervalId = setInterval(function () {
                     options.barrage.clientObject.getMessageByTime(Math.round(options.player_source.currentTime));
                     updateBarrageDisplay();
-                }, options.barrageTimer.intervalTime);
+                }, barrageControl.intervalTime);
+            }
 
-            } else if (methodName == 'close') {
-                // 关闭弹幕
-                clearInterval(options.barrageTimer.intervalId);
-                options.barrageTimer.intervalId = undefined;
+            // 关闭弹幕
+            function _close() {
+                clearInterval(barrageControl.intervalId);
+                barrageControl.intervalId = undefined;
                 updateBarrageDisplay('clean');
+            }
+
+            // 暂停后再播放时打开弹幕
+            function _play() {
+                if (barrageControl.isOpen && !barrageControl.intervalId) {
+                    barrageControl.intervalId = setInterval(function () {
+                        options.barrage.clientObject.getMessageByTime(Math.round(options.player_source.currentTime));
+                        updateBarrageDisplay();
+                    }, barrageControl.intervalTime);
+                }
+            }
+
+            // 暂停弹幕
+            function _pause() {
+                if (barrageControl.isOpen && barrageControl.intervalId) {
+                    clearInterval(barrageControl.intervalId);
+                    barrageControl.intervalId = undefined;
+                }
             }
         }
 
@@ -784,11 +829,13 @@
             if (!$this.hasClass('active')) {
                 $barrageInputContainer.addClass('active');
                 $this.addClass('active');
+                barrageControl.isOpen = true;
                 updateBarrageData('open');
             } else {
                 $barrageInputContainer.removeClass('active');
                 $this.removeClass('active');
                 $h5playerBarrageWrap.empty();
+                barrageControl.isOpen = false;
                 updateBarrageData('close');
             }
         }
