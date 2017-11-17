@@ -70,12 +70,9 @@ barrage: {
         videoId: ''
     },
     // 弹幕服务器地址
-    serverUrl: '',
-    // 弹幕客户端对象 - 处理弹幕发送、接收和显示
-    clientObject: null
+    serverUrl: ''
 }
 ```
-
 
 ##  How to use
 ```javascript

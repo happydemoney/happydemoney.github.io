@@ -18,7 +18,15 @@ function antSwitch() {
                 case 'FlvJs':
                     var player = $parentRenderItem.videoPlayer({
                         liveStreamUrl: liveStreamUrl,
-                        isLive: true
+                        isLive: true,
+                        barrage: {
+                            isShow: true,
+                            videoInfo: {
+                                videoName: 'liveTest',
+                                videoId: 999
+                            },
+                            serverUrl: 'http://192.168.1.89:3001'
+                        }
                     });
                     $parentRenderItem.data('player', player);
                     break;
@@ -50,7 +58,7 @@ function antSwitch() {
                                 videoName: 'videoTest',
                                 videoId: 1000
                             },
-                            serverUrl: 'http://192.168.1.206:3000'
+                            serverUrl: 'http://192.168.1.89:3000'
                         }
                     });
 

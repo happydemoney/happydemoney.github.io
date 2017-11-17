@@ -1,16 +1,15 @@
 /* 
- * barrage 弹幕相关操作 
+ * Barrage 弹幕相关操作 
  * 依赖包: socket.io.js
  **/
 var Barrage = function (isLive) {
     this.isLive = isLive;
 };
-// barrage 原型
+// Barrage 原型
 Barrage.prototype = {
     id: undefined,  // 当前socket连接唯一ID
     curCity: undefined, // 当前位置信息
     socket: null,   // socket对象
-    receiveMsg: [],
     // 连接弹幕服务器
     connectServer: function (serverUrl, name, id) {
         var thisBarrage = this;
@@ -40,29 +39,32 @@ Barrage.prototype = {
         });
         // 连接错误
         thisBarrage.socket.on('connect_error', function () {
-            console.log("connect_error");
+            console.log("Barrage connect_error");
         });
         // 重连失败
         thisBarrage.socket.on('reconnect_failed', function () {
-            console.log("error");
+            console.log("Barrage reconnect_failed");
         });
         // 断开连接
         thisBarrage.socket.on('disconnect', function () {
-            console.log("disconnect");
+            console.log("Barrage disconnect");
         });
         // 连接超时
         thisBarrage.socket.on('connect_timeout', function () {
-            console.log("connect_timeout");
+            console.log("Barrage connect_timeout");
         });
         // 异常错误
         thisBarrage.socket.on('error', function (err) {
-            console.log("error");
+            console.log("Barrage error");
         });
-
+    },
+    /* 此方法执行一次 */
+    messageMonitor: function (callback) {
+        callback = callback || function () { };
         // 监听广播消息
-        thisBarrage.socket.on('server', function (data) {
+        this.socket.on('server', function (data) {
             var msgs = JSON.parse(data);
-            if (this.isLive == 1) {
+            if (this.isLive) {
                 if (msgs != null && msgs[0].usr_type == 0) {
                     var con = msgs[0].content.msg;
                     var reg = con.match(/\[[^@]{1,3}\]/g);
@@ -82,11 +84,40 @@ Barrage.prototype = {
             } else {
                 msg = msgs;
             }
-            thisBarrage.receiveMsg = msg;
+            //thisBarrage.receiveMsg = msg;
+            if (msg.length > 0) {
+                callback(msg);
+            }
         });
     },
     // 发送消息到服务器
-    SendMsgToServer: function (msg) {
+    // barrageMsg { time  content color font }
+    // time 时间 - content 弹幕或消息内容 - color 字体颜色 - font 字号大小
+    // userType: 0 游客或观众 ， 1 主播 （ 针对直播 ）
+    SendMsgToServer: function (barrageMsg, userType) {
+        var msg = null;
+        userType = userType || 0;
+        if (this.isLive) {
+            msg = {
+                'time': barrageMsg.time,
+                'content': {
+                    "ip": this.curCity,
+                    "msg": barrageMsg.content
+                },
+                'color': barrageMsg.color,
+                'font': barrageMsg.font,
+                'usr_id': this.id,
+                'usr_type': userType
+            };
+        } else {
+            msg = {
+                'time': barrageMsg.time,
+                'content': barrageMsg.content,
+                'color': barrageMsg.color,
+                'font': barrageMsg.font,
+                'usr_id': this.id
+            };
+        }
         this.socket.emit('message', JSON.stringify(msg));
     },
     // 获取视频当前进度的弹幕消息

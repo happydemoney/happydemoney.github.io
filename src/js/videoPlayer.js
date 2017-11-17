@@ -2,7 +2,7 @@
  *  videoPlayer 1.0.2 
  *  https://github.com/happydemoney/happydemoney.github.io
  *  @license MIT licensed
- *  @author: happydemoney(6744255@qq.com)
+ *  @author: happydemoney(674425534@qq.com)
  */
 (function (global, factory) {
     'use strict';
@@ -22,6 +22,13 @@
     var $document = $(document);
     var VERSION = '1.0.2';
     var pluginName = 'videoPlayer';
+
+    //  视频/视频流类别
+    var videoType_RTMP = 'RTMP',    //  rtmp: Flash播放器(only)
+        videoType_FLV = 'FLV',      //  flv: 基于flv.js的HTML5播放器
+        videoType_HLS = 'HLS',      //  hls: 基于hls.js的HTML5播放器
+        videoType_HTML5 = 'HTML5';  //  html5: video标签原生支持的视频格式 .mp4/.ogg/.webm
+
     var idCount = { // 视频ID计数
         Html5: 0,
         Flash: 0
@@ -39,22 +46,13 @@
             isWebkitBrowser = /webkit/gi.test(navigator.userAgent),
             isIE11Browser = /rv/gi.test(navigator.userAgent) && /trident/gi.test(navigator.userAgent),
             isEdgeBrowser = /edge/gi.test(navigator.userAgent) && /trident/gi.test(navigator.userAgent),
-            //  视频/视频流类别
-            //  rtmp: Flash播放器(only)
-            //  flv: 基于flv.js的HTML5播放器
-            //  hls: 基于hls.js的HTML5播放器
-            //  html5: video标签原生支持的视频格式 .mp4/.ogg/.webm
-            videoType = {
-                rtmp: 'RTMP',
-                flv: 'FLV',
-                hls: 'HLS',
-                html5: 'HTML5'
-            },
             // 弹幕控制对象 - 包含弹幕开启状态、定时器ID、请求延时时间设定
             barrageControl = {
-                isOpen: false,
-                intervalTime: 5000, // 5秒
-                intervalId: undefined
+                isInited: false,      // 弹幕动画样式是否初始化
+                isOpen: false,        // 弹幕面板 和 展示 是否开启
+                isMonitored: false,   // 弹幕服务监控是否开启
+                intervalTime: 5000,   // 请求延时时间设定 - 5秒
+                intervalId: undefined // 定时器ID
             };
 
         options = $.extend({
@@ -349,10 +347,10 @@
         // HTML5播放器    
         function Html5Player(isFresh) {
             switch (getVideoType(options.videoUrl)) {
-                case videoType.flv:
+                case videoType_FLV:
                     FlvPlayer(isFresh);
                     break;
-                case videoType.hls:
+                case videoType_HLS:
                     HlsPlayer(isFresh);
                     break;
                 default:
@@ -371,15 +369,15 @@
                 regRTMP = /^rtmp:/gi;
 
             if (regRTMP.test(videoUrl)) {
-                return videoType.rtmp;
+                return videoType_RTMP;
             } else if (regFLV.test(videoUrl)) {
-                return videoType.flv;
+                return videoType_FLV;
             }
             else if (regHLS.test(videoUrl)) {
-                return videoType.hls;
+                return videoType_HLS;
             }
             else if (regHTML5.test(videoUrl)) {
-                return videoType.html5;
+                return videoType_HTML5;
             }
         }
 
@@ -592,7 +590,6 @@
                     '</div></div></div>',
 
                 html5ControlString = options.playerType !== 'Flash' && options.controls && !options.isDefaultControls ? (options.isLive ? html5ControlString_live : html5ControlString_onDemond) : '',
-                // autoplayTag = isTouchDevice && options.autoplay ? "autoplay muted" : "",
                 videoString = '<div class="videoContainer"><div class="liveContent ' + h5playerStatusClass + '">' +
                     '<video class="' + videoClassName + '" id="' + playerId + '" ' + controlsTag + '>' +
                     'Your browser is too old which does not support HTML5 video' +
@@ -601,7 +598,10 @@
                     '</div>';
 
             playerContainer.append(videoString);
-            initHtml5CtrlEvents(options);
+            // 缓存弹幕父节点DOM对象
+            options.barrageContainer = options.playerContainer.find('.h5player-barrage-wrap');
+
+            initHtml5CtrlEvents();
             return {
                 playerId: playerId,
                 volumeSlidebarId: volumeSlidebarId
@@ -609,12 +609,11 @@
         }
 
         function initHtml5CtrlEvents() {
+
             // webkit内核浏览器volue slidebar样式初始化
             var webkitVolumePseudoClassInited = false,
                 timeoutId = undefined;
 
-            // 缓存弹幕父节点DOM对象
-            options.barrageContainer = options.playerContainer.find('.h5player-barrage-wrap');
             options.playerContainer.on('mouseenter.vp_custom_event', '.liveContent', function () {
                 var $this = $(this);
                 $this.hasClass('h5player-status-controls-in') ? '' : $this.addClass('h5player-status-controls-in');
@@ -650,11 +649,6 @@
                 h5player.muted();
             });
 
-            // 弹幕相关事件 
-            options.playerContainer.on('click.vp_custom_event', '.h5player-ctrl-bar .btn-barrage', barrageFuncSwitch);
-            options.playerContainer.on('click.vp_custom_event', '.barrage-input-container .barrage-send', barrageSend);
-            options.playerContainer.on('keydown.vp_custom_event', '.barrage-input-container .barrage-input', barrageInput);
-
             // 屏蔽视频进度条圆点的拖放事件
             options.playerContainer.on('dragstart.vp_custom_event', '.h5player-live-ctrl .h5player-progress-btn-scrubber', function (e) {
                 e.preventDefault();
@@ -676,32 +670,17 @@
                 h5player.seeking = true;
                 h5player.pause();
             });
-            // document mousemove
-            $(document).on('mousemove.vp_custom_event', function (e) {
-                if (h5player.seeking) {
-                    e.stopPropagation();
-                    e.stopImmediatePropagation();
-                    var $this = $(this),
-                        $progressBarContainer = options.playerContainer.find('.h5player-live-ctrl .h5player-progress-bar-container'),
-                        containerWidth = $progressBarContainer.width(),
-                        thisParentsOffsetLeft = $progressBarContainer.parents('.videoContainer')[0].offsetLeft,
-                        thisPageX = e.pageX,
-                        currentTimePercent = (thisPageX - thisParentsOffsetLeft) / containerWidth,
-                        param = {
-                            currentTimePercent: currentTimePercent,
-                            isSeek: true
-                        };
 
-                    h5player.progressChange(param);
-                }
-            });
-            // document mouseup 
-            $(document).on('mouseup.vp_custom_event', function (e) {
-                if (h5player.seeking) {
-                    h5player.seeking = false;
-                    h5player.play();
-                }
-            });
+            // 弹幕相关事件 
+            options.playerContainer.on('click.vp_custom_event', '.h5player-ctrl-bar .btn-barrage', barrageFuncSwitch);
+            options.playerContainer.on('click.vp_custom_event', '.barrage-input-container .barrage-send', barrageSend);
+            options.playerContainer.on('keydown.vp_custom_event', '.barrage-input-container .barrage-input', barrageInput);
+
+            // document mousemove/mouseup 
+            $document.on('mousemove.vp_custom_event', documentMousemove);
+            $document.on('mouseup.vp_custom_event', documentMouseup);
+            $document.on('webkitfullscreenchange.vp_custom_event mozfullscreenchange.vp_custom_event MSFullscreenChange.vp_custom_event fullscreenchange.vp_custom_event', documentFullscreenchange);
+
             // input range - input事件在IE10尚不支持，可以使用change替代
             options.playerContainer.on('input.vp_custom_event change.vp_custom_event', '.h5player-ctrl-bar .h5player-ctrl-bar-volume-slidebar', function () {
                 var $this = $(this),
@@ -712,13 +691,7 @@
                     $this.attr('data-process', thisValue);
                 }
             });
-            $(document).on('webkitfullscreenchange.vp_custom_event mozfullscreenchange.vp_custom_event MSFullscreenChange.vp_custom_event fullscreenchange.vp_custom_event', function () {
-                var $videoContainer = options.playerContainer.find('.videoContainer ');
-                if (h5player.fullscreenStatus && $videoContainer.hasClass('h5player-status-fullScreen') && !fullscreenElement()) {
-                    h5player.fullscreenStatus = false;
-                    $videoContainer.removeClass('h5player-status-fullScreen');
-                }
-            });
+
             // 只针对webkit内核的浏览器
             function _initVolumePseudoClassStyle(selecter) {
                 if (webkitVolumePseudoClassInited) return;
@@ -732,6 +705,38 @@
                 newStyle += '</style>';
                 $(newStyle).appendTo('head');
                 webkitVolumePseudoClassInited = true;
+            }
+        }
+        // document event
+        function documentMousemove(e) {
+            if (h5player.seeking) {
+                e.stopPropagation();
+                e.stopImmediatePropagation();
+                var $this = $(this),
+                    $progressBarContainer = options.playerContainer.find('.h5player-live-ctrl .h5player-progress-bar-container'),
+                    containerWidth = $progressBarContainer.width(),
+                    thisParentsOffsetLeft = $progressBarContainer.parents('.videoContainer')[0].offsetLeft,
+                    thisPageX = e.pageX,
+                    currentTimePercent = (thisPageX - thisParentsOffsetLeft) / containerWidth,
+                    param = {
+                        currentTimePercent: currentTimePercent,
+                        isSeek: true
+                    };
+
+                h5player.progressChange(param);
+            }
+        }
+        function documentMouseup(e) {
+            if (h5player.seeking) {
+                h5player.seeking = false;
+                h5player.play();
+            }
+        }
+        function documentFullscreenchange() {
+            var $videoContainer = options.playerContainer.find('.videoContainer ');
+            if (h5player.fullscreenStatus && $videoContainer.hasClass('h5player-status-fullScreen') && !fullscreenElement()) {
+                h5player.fullscreenStatus = false;
+                $videoContainer.removeClass('h5player-status-fullScreen');
             }
         }
 
@@ -765,7 +770,7 @@
             // 打开弹幕
             function _open() {
                 if (!options.barrage.clientObject) {
-                    options.barrage.clientObject = new Barrage(options.isLive);
+                    options.barrage.clientObject = new Barrage(options.isLive); // Barrage.js
                     options.barrage.clientObject.connectServer(options.barrage.serverUrl, options.barrage.videoInfo.videoName, options.barrage.videoInfo.videoId);
                 }
                 options.barrage.clientObject.getMessageByTime(Math.round(options.player_source.currentTime));
@@ -773,15 +778,20 @@
 
                 barrageControl.intervalId = setInterval(function () {
                     options.barrage.clientObject.getMessageByTime(Math.round(options.player_source.currentTime));
-                    updateBarrageDisplay();
                 }, barrageControl.intervalTime);
             }
 
             // 关闭弹幕
             function _close() {
+                updateBarrageDisplay('clean');
                 clearInterval(barrageControl.intervalId);
                 barrageControl.intervalId = undefined;
-                updateBarrageDisplay('clean');
+                // 关闭当前客户端与服务端的连接
+                options.barrage.clientObject.closeServer(options.barrage.videoInfo.videoName, options.barrage.videoInfo.videoId);
+                // 初始化弹幕交互对象
+                options.barrage.clientObject = null;
+                // 弹幕监听关闭，值改为false
+                barrageControl.isMonitored = false;
             }
 
             // 暂停后再播放时打开弹幕
@@ -789,7 +799,6 @@
                 if (barrageControl.isOpen && !barrageControl.intervalId) {
                     barrageControl.intervalId = setInterval(function () {
                         options.barrage.clientObject.getMessageByTime(Math.round(options.player_source.currentTime));
-                        updateBarrageDisplay();
                     }, barrageControl.intervalTime);
                 }
             }
@@ -809,13 +818,18 @@
         function updateBarrageDisplay(method) {
             if (method == 'clean') {
                 options.barrageContainer.empty();
-            } else {
-                var receiveMsg = options.barrage.clientObject.receiveMsg;
-                if (receiveMsg.length > 0) {
-                    for (var i = 0; i < receiveMsg.length; i++) {
-                        options.barrageContainer.append(createBarrageDom(receiveMsg[i]));
+            } else if (!barrageControl.isMonitored) {
+
+                barrageControl.isMonitored = true;
+                options.barrage.clientObject.messageMonitor(function (receiveMsg) {
+
+                    if (receiveMsg.length > 0) {
+                        for (var i = 0; i < receiveMsg.length; i++) {
+                            options.barrageContainer.append(createBarrageDom(receiveMsg[i]));
+                        }
                     }
-                }
+
+                });
             }
         }
 
@@ -827,6 +841,7 @@
                 $barrageInputContainer = $parentLiveContent.siblings('.barrage-input-container');
 
             if (!$this.hasClass('active')) {
+                initBarrageStyle();
                 $barrageInputContainer.addClass('active');
                 $this.addClass('active');
                 barrageControl.isOpen = true;
@@ -839,42 +854,92 @@
                 updateBarrageData('close');
             }
         }
+        //  初始化弹幕动画样式
+        function initBarrageStyle() {
+
+            if (!barrageControl.isInited) {
+                barrageControl.isInited = true;
+
+                // 弹幕动画完成 - 清除事件
+                // Chrome, Safari 和 Opera 代码 - webkitAnimationEnd
+                // 标准写法 - animationend
+                options.barrageContainer.on('animationend webkitAnimationEnd', '.h5player-barrage-item', function () {
+                    $(this).remove();
+                });
+
+                var barrageContainer_width = options.barrageContainer.width();
+                var newStyle = '<style>';
+
+                // 通用
+                newStyle += '@keyframes barrage {\
+                                0% {\
+                                    visibility: visible;\
+                                    transform: translateX('+ barrageContainer_width + 'px);\
+                                }\
+                                100% {\
+                                    visibility: visible;\
+                                    transform: translateX(-100%);\
+                                }\
+                            }';
+
+                // 兼容火狐浏览器    
+                newStyle += '@-moz-keyframes barrage {\
+                                0% {\
+                                    visibility: visible;\
+                                    -moz-transform: translateX('+ barrageContainer_width + 'px);\
+                                }\
+                                100% {\
+                                    visibility: visible;\
+                                    -moz-transform: translateX(-100%);\
+                                }\
+                            }';
+                // 早期版本webkit内核浏览器
+                newStyle += '@-webkit-keyframes barrage {\
+                                0% {\
+                                    visibility: visible;\
+                                    -webkit-transform: translateX('+ barrageContainer_width + 'px);\
+                                }\
+                                100% {\
+                                    visibility: visible;\
+                                    -webkit-transform: translateX(-100%);\
+                                }\
+                            }';
+                // opera
+                newStyle += '@-o-keyframes barrage {\
+                                0% {\
+                                    visibility: visible;\
+                                    -o-transform: translateX('+ barrageContainer_width + 'px);\
+                                }\
+                                100% {\
+                                    visibility: visible;\
+                                    -o-transform: translateX(-100%);\
+                                }\
+                            }';
+
+                newStyle += '</style>';
+                $(newStyle).appendTo('head');
+            }
+        }
         // 发送弹幕
         function barrageSend() {
             var $this = $(this),
-                $barrageWrap = $this.parents('.videoContainer').find('.h5player-barrage-wrap'),
                 $barrageInput = $this.siblings('.barrage-input'),
                 barrageInfo = $barrageInput.val(),
-                msg;
+                barrageMsg;
 
             if (!barrageInfo) {
                 alert('请输入弹幕信息~');
             } else {
                 // 直播
-                if (options.isLive == 1) {
-                    msg = {
-                        'time': Math.round(options.player_source.currentTime),
-                        'content': {
-                            "ip": options.barrage.clientObject.curCity,
-                            "msg": barrageInfo
-                        },
-                        'color': '#ffffff',
-                        'font': '25',
-                        'usr_id': options.barrage.clientObject.id,
-                        'usr_type': 0
-                    };
-                } else {
-                    // 点播
-                    msg = {
-                        'time': Math.round(options.player_source.currentTime),
-                        'content': barrageInfo,
-                        'color': '#ffffff',
-                        'font': '25',
-                        'usr_id': options.barrage.clientObject.id
-                    };
-                }
-                options.barrage.clientObject.SendMsgToServer(msg);
-                $barrageWrap.append(createBarrageDom(msg));
+                barrageMsg = {
+                    time: Math.round(options.player_source.currentTime),
+                    content: barrageInfo,
+                    color: '#ffffff',
+                    font: 18
+                };
+
+                options.barrage.clientObject.SendMsgToServer(barrageMsg);
+                options.barrageContainer.append(createBarrageDom(barrageMsg));
                 $barrageInput.val('');
             }
         }
@@ -889,11 +954,24 @@
         }
         // 创建弹幕dom节点
         function createBarrageDom(barrageData) {
+            var showMsg = '';
+            // 直播
+            if (options.isLive) {
+                if (typeof barrageData.content === 'object') {
+                    showMsg = barrageData.content.ip + ' : ' + barrageData.content.msg
+                } else {
+                    return;
+                }
+            } else {
+                showMsg = barrageData.content;
+            }
+
             var barrageItem = '<div class="h5player-barrage-item animation_barrage" style="' +
                 'color:' + barrageData.color + ';' +
-                'font-size:' + barrageData.fontSize + 'px;' +
+                'font-size:' + barrageData.font + 'px;' +
                 'top:' + randomTop() + 'px;' +
-                '">' + barrageData.content + '</div>';
+                '">' + showMsg + '</div>';
+
             return barrageItem;
         }
         // 随机生成弹幕位置 - 距离视频顶部
@@ -908,11 +986,16 @@
          * destroy
          */
         function destroy() {
+
             options.player.destroy();
             options.playerContainer.find('.videoContainer').remove();
             // 事件销毁
             options.playerContainer.off('.vp_custom_event');
-            $(document).off('.vp_custom_event');
+            // 清除弹幕定时器，如果存在
+            if (barrageControl.intervalId) {
+                clearInterval(barrageControl.intervalId);
+                barrageControl.intervalId = undefined;
+            }
         }
 
         /**

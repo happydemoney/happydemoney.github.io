@@ -352,6 +352,7 @@
 
     line-height: 1.125;
 }
+
 .animation_barrage {
     animation: barrage 5s linear 0s 1;
     /* Firefox */
@@ -364,17 +365,6 @@
 
 .h5player-status-paused .animation_barrage {
     animation-play-state: paused;
-}
-
-@keyframes barrage {
-    0% {
-        visibility: visible;
-        transform: translateX(1024px);
-    }
-    100% {
-        visibility: visible;
-        transform: translateX(-100%);
-    }
 }
 
 /* 弹幕输入框部分 */
