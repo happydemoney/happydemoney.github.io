@@ -140,6 +140,7 @@ function antSwitch() {
 function setStreamUrl() {
 
     var hostName = $('input[name="hostName"]').val() || location.hostname,
+        origin = location.origin,
         appName = $('input[name="appName"]').val(),
         streamName = $('input[name="streamName"]').val(),
         palyerType = '', // 'Flash' - 'FlvJs' - 'HlsJs'
@@ -158,13 +159,13 @@ function setStreamUrl() {
         },
         oVideoUrl = {
             flash: 'https://cdn.memorieslab.com//video/mgn_brand_video.mp4',
-            flv: 'http://' + hostName + ':' + onDemandPort + '/videoTest/flv/720-flv.flv',
+            flv: origin + '/videoTest/flv/720-flv.flv',
             // flv: 'https://cdn.memorieslab.com//video/mgn_brand_video.mp4',
             // flv: 'http://' + hostName + ':' + onDemandPort + '/videoTest/神奇女侠.mp4',
             // hls: 'http://ivi.bupt.edu.cn/hls/cctv5hd.m3u8'
             //hls: 'http://' + hostName + ':' + onDemandPort + '/videoTest/m3u8/xmpolice.m3u8',
             // hls: 'https://cdn.memorieslab.com/video/mgn_brand_video.mp4'
-            hls: 'http://' + hostName + ':' + onDemandPort + '/videoTest/m3u8/xmpolice.m3u8'
+            hls: origin + '/videoTest/m3u8/xmpolice.m3u8'
             // hls: 'http://' + hostName + ':' + onDemandPort + '/videoTest/mp4/265809.mp4'
             // hls: 'http://127.0.0.1:8080/videoTest/mp4/265809.mp4'
             //hls: 'http://cdn.simope.net/hls/1482227427575463/50a672b9edffa2b5ee6377d054557c3a/1_720_25_H264_1200_4_3_1_0_2_1_3_0_1_0_2_0_0_0_N/1bc4faadc6ca4e60b22b93d891386ea9.m3u8'
