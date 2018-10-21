@@ -94,8 +94,19 @@ function antSwitch() {
                     var player = $parentRenderItem.videoPlayer({
                         videoUrl: oVideoUrl.flv,
                         skinSetting: {
-                            skinName: 'default', // 优雅(elegant)、科技(technology)、简洁(concise)
+                            skinName: 'concise', // 优雅(elegant)、科技(technology)、简洁(concise)
                             skinColor: 'default' // (#1289f7)  /   (#30D2FA) /    (#10CA56)
+                        },
+                        barrageSetting: {
+                            // 是否显示弹幕按钮
+                            isShow: true,
+                            // 视频信息 - 名称和ID
+                            videoInfo: {
+                                videoName: 'videoTest',
+                                videoId: '1000'
+                            },
+                            // 弹幕服务器地址
+                            serverUrl: 'http://47.75.107.96:3000'
                         },
                         // 全景相关配置
                         vrSetting: {
