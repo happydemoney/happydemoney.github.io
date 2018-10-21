@@ -1,0 +1,14 @@
+#EXTM3U
+#EXT-X-VERSION:3
+#EXT-X-ALLOW-CACHE:YES
+#EXT-X-MEDIA-SEQUENCE:0
+#EXT-X-TARGETDURATION:5
+#EXTINF:4.796, no desc
+xmpolice-4.ts
+#EXTINF:4.796, no desc
+xmpolice-5.ts
+#EXTINF:4.796, no desc
+xmpolice-6.ts
+#EXTINF:2.236, no desc
+xmpolice-7.ts
+#EXT-X-ENDLIST
