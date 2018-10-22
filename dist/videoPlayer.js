@@ -3,7 +3,7 @@
 		module.exports = factory(require("flvjs"), require("Hls"), require("jQuery"));
 	else if(typeof define === 'function' && define.amd)
 		define(["flvjs", "Hls", "jQuery"], factory);
-	else if(typeof exports === 'object')
+	else if(typeof exports === 'object') 
 		exports["videoPlayer"] = factory(require("flvjs"), require("Hls"), require("jQuery"));
 	else
 		root["videoPlayer"] = factory(root["flvjs"], root["Hls"], root["jQuery"]);

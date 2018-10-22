@@ -2,7 +2,7 @@ var playerNew = null;
 $(function () {
 
     // stream url param
-
+ 
     setStreamUrl();
     $('.ant-switch').on('click', antSwitch);
 
