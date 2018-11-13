@@ -2,6 +2,7 @@
 
     A video player base on HTML5 , support barrage and custom UI and other useful funcition.
 [![sourceCodeHub](https://img.shields.io/badge/%E6%BA%90%E7%A0%81%E4%BB%93%E5%BA%93-v1.0.1-blue.svg)](https://github.com/happydemoney/yz-h5player)
+[![showUrlCode](https://img.shields.io/badge/%E6%BC%94%E7%A4%BA%E4%BB%93%E5%BA%93-v1.0.1-blue.svg)](https://github.com/happydemoney/happydemoney.github.io)
 ##  功能说明
 *   点播/直播，支持视频格式{.flv(h264+aac/mp3),.m3u8,.mp4及其他video原生支持的视频格式.ogg/.webm等等(需要浏览器支持)},直播协议HTTP-FLV,HLS,RTMP（需要flash支持，功能很少，只有基本的播放功能）
 *   支持清晰度切换(240P/480P/720P/1080P)，自由配置
