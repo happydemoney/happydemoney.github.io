@@ -127,9 +127,9 @@ function antSwitch() {
                         },
                         // 全景相关配置
                         vrSetting: {
-                            vrSwitch: false,  // vr开关 - 默认关闭
+                            vrSwitch: true,  // vr开关 - 默认关闭
                             vrControl: true, // vrControl切换条是否展示
-                            vrMode: 0  // vrMode(全景类型--0：全景,1：半景,2：小行星,3：鱼眼);
+                            vrMode: 0
                         },
                         // 面板设置 - logo显示，开/关灯，分享到社交平台等
                         panelSetting: {
