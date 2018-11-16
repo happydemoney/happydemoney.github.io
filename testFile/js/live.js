@@ -66,7 +66,7 @@ function antSwitch() {
                                 videoName: 'liveTest',
                                 videoId: 999
                             },
-                            serverUrl: 'https://47.75.107.96:3001'
+                            serverUrl: 'http://47.75.107.96:3001'
                         }
                     });
                     $parentRenderItem.data('player', player);
@@ -123,7 +123,7 @@ function antSwitch() {
                                 videoId: '1000'
                             },
                             // 弹幕服务器地址
-                            serverUrl: 'https://47.75.107.96:3000'
+                            serverUrl: 'http://47.75.107.96:3000'
                         },
                         // 全景相关配置
                         vrSetting: {
